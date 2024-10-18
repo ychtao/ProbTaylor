@@ -53,10 +53,12 @@ let rec tilde_aux (f : expr) (k0 : int) : expr * int =
     Add (Mul (Div (f1', f2'), (Add (Const 1., ek))), dk), k
   | _ -> failwith "impossible"
 
-let tilde (f : expr) : expr =
-  fst (tilde_aux f 0)
+let tilde (f : expr) : expr * int = tilde_aux f 0
 
 let _ = 
-  let f = Div (Mul (Var "x", Var "x"), Add (Var "y", Var "z")) in
-  let f' = tilde f in
-  print_endline (string_of_expr f')
+  let f = Div (Var "x", (Add (Var "x", Var "y"))) in
+  let (tf, k) = tilde f in
+  let oc = open_out "tilde.txt" in 
+  Printf.fprintf oc "%s\n" (string_of_expr tf);  
+  Printf.fprintf oc "%s\n" (string_of_int k);
+  close_out oc  
