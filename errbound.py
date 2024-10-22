@@ -4,7 +4,6 @@ import numpy as np
 from functools import reduce
 import time
 
-
 def vars_pos_neg(vars):
   pn_vars = {}
   for var in vars:
@@ -81,10 +80,13 @@ def err_bound(tf, k, vars, c, eps):
   Ku = get_Ku(ps, q, pn_vars, k, eps)
   mu2 = (sps.E(Ku)) ** 2
   sigma2 = sps.variance(Ku)
-  equation = sp.simplify(sigma2 / (sigma2 + mu2) + c - 1)
+  print(sps.E(Ku))
+  print(sp.solve(sps.E(Ku), sp.symbols('u')))
+  # equation = sp.simplify(sigma2 / (sigma2 + mu2) + c - 1)
+  equation = sp.simplify(sigma2 - (1 - c) * (sigma2 + mu2))
   print(sp.solve(equation, sp.symbols('u')))
 
-x = sps.Uniform('x', 1, 2)
+x = sps.Uniform('x', -2, 2)
 y = sps.Uniform('y', 1, 2)
 z = sps.Uniform('z', 1, 2)
 vars = (x, y, z)
