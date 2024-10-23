@@ -74,17 +74,58 @@ def get_Ku(ps, q, pn_vars, k, eps):
   Ku = eps ** 2 * p2u - q ** 2 * u
   return sp.simplify(sp.expand(Ku))
 
+def elim_pnprod(tf):
+  tf = sp.expand(sp.simplify(tf))
+  if not isinstance(tf, sp.Add):
+    return tf
+  ret = 0
+  for term in tf.args:
+    if isinstance(term, sp.Mul):
+      zero_flag = False
+      flags = {}
+      for var in term.args:
+        if isinstance(var, sp.Max):
+          varm = var.args[1]
+        elif isinstance(var, sp.Pow) and isinstance(var.args[0], sp.Max):
+          varm = var.args[0].args[1]
+        else:
+          continue
+        if isinstance(varm, sps.rv.RandomSymbol):
+          if (varm.name, -1) in flags:
+            zero_flag = True
+            break
+          flags[(varm.name, 1)] = True 
+        elif isinstance(varm, sp.Mul) and varm.args[0] == -1:
+          if (varm.args[1].name, 1) in flags:
+            zero_flag = True 
+            break
+          flags[(varm.args[1].name, -1)] = True
+      if not zero_flag:
+        ret += term
+    else:
+      ret += term
+  return ret
+
 def err_bound(tf, k, vars, c, eps):
   pn_vars = vars_pos_neg(vars)
   ps, q = get_pq(tf, k)
   Ku = get_Ku(ps, q, pn_vars, k, eps)
-  mu2 = (sps.E(Ku)) ** 2
-  sigma2 = sps.variance(Ku)
-  print(sps.E(Ku))
-  print(sp.solve(sps.E(Ku), sp.symbols('u')))
-  # equation = sp.simplify(sigma2 / (sigma2 + mu2) + c - 1)
-  equation = sp.simplify(sigma2 - (1 - c) * (sigma2 + mu2))
-  print(sp.solve(equation, sp.symbols('u')))
+  Ku = elim_pnprod(Ku)
+  M1 = sp.simplify(sps.E(Ku))
+  Ku2 = elim_pnprod(Ku ** 2)
+  print(Ku2)
+  Ku4 = elim_pnprod(Ku2 ** 2)
+  print(Ku4)
+  M2 = sps.E(Ku2)
+  print(2)
+  M4 = sps.E(Ku4)
+  print(4)
+  for vinv in range(0, 10):
+    v = 10 ** (vinv)
+    pos_prob = 1 - (4 / 9) * (2 * np.sqrt(3) - 3) * (-2 * M1 / v + 3 * M2 / (v ** 2) - M4 / (v ** 4)) 
+  # equation = sp.simplify(sigma2 - (1 - c) * (sigma2 + mu2))
+    equation = sp.simplify(pos_prob - 1 + c)
+    print(sp.solve(equation, sp.symbols('u')))
 
 x = sps.Uniform('x', -2, 2)
 y = sps.Uniform('y', 1, 2)
