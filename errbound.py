@@ -61,19 +61,6 @@ def sep_pos_neg(f):
         fp += term
   return fp, fn
 
-def get_Ku(ps, q, pn_vars, k, eps):
-  p2u = 0
-  for i in range(1, k + 1):
-    p = decomp_pos_neg(ps[i], pn_vars)
-    pp, pn = sep_pos_neg(p)
-    # print(i, pp, pn)
-    p2u += pp + pn
-  p2u = sp.simplify(sp.expand(p2u ** 2))
-  # print(p2u)
-  u = sp.symbols('u')
-  Ku = eps ** 2 * p2u - q ** 2 * u
-  return sp.simplify(sp.expand(Ku))
-
 def elim_pnprod(tf):
   tf = sp.expand(sp.simplify(tf))
   if not isinstance(tf, sp.Add):
@@ -106,26 +93,33 @@ def elim_pnprod(tf):
       ret += term
   return ret
 
+def get_Ku(ps, q, pn_vars, k, eps):
+  p2u = 0
+  for i in range(1, k + 1):
+    p = decomp_pos_neg(ps[i], pn_vars)
+    pp, pn = sep_pos_neg(p)
+    p2u += pp + pn
+  p2u = elim_pnprod(p2u ** 2)
+  u = sp.symbols('u')
+  Ku = eps ** 2 * p2u - q ** 2 * u
+  return sp.simplify(sp.expand(Ku))
+
 def err_bound(tf, k, vars, c, eps):
   pn_vars = vars_pos_neg(vars)
   ps, q = get_pq(tf, k)
   Ku = get_Ku(ps, q, pn_vars, k, eps)
   Ku = elim_pnprod(Ku)
-  M1 = sp.simplify(sps.E(Ku))
-  Ku2 = elim_pnprod(Ku ** 2)
-  print(Ku2)
-  Ku4 = elim_pnprod(Ku2 ** 2)
-  print(Ku4)
-  M2 = sps.E(Ku2)
-  print(2)
-  M4 = sps.E(Ku4)
-  print(4)
-  for vinv in range(0, 10):
-    v = 10 ** (vinv)
-    pos_prob = 1 - (4 / 9) * (2 * np.sqrt(3) - 3) * (-2 * M1 / v + 3 * M2 / (v ** 2) - M4 / (v ** 4)) 
-  # equation = sp.simplify(sigma2 - (1 - c) * (sigma2 + mu2))
-    equation = sp.simplify(pos_prob - 1 + c)
-    print(sp.solve(equation, sp.symbols('u')))
+  mu2 = sps.E(Ku) ** 2
+  sigma2 = sps.E(elim_pnprod(Ku ** 2)) - mu2
+  equation = (1 - c) * (sigma2 + mu2) - sigma2
+  equation = sp.simplify(sp.expand(equation))
+  u = sp.symbols('u')
+  a = equation.coeff(u, 2)
+  b = equation.coeff(u, 1)
+  c = equation.coeff(u, 0)
+  # print("delta = {}".format(b ** 2 - 4 * a * c))
+  # print(equation)
+  return (sp.solve(equation, sp.symbols('u')))
 
 x = sps.Uniform('x', -2, 2)
 y = sps.Uniform('y', 1, 2)
@@ -145,4 +139,5 @@ eps = 2 ** (-24)
 
 start = time.time()
 output = err_bound(tf, k, vars, c, eps)
+print(output)
 print(f"Time: {time.time() - start}")
