@@ -101,7 +101,7 @@ def get_Ku(ps, q, pn_vars, k, eps):
     p2u += pp + pn
   p2u = elim_pnprod(p2u ** 2)
   u = sp.symbols('u')
-  Ku = eps ** 2 * p2u - q ** 2 * u
+  Ku = eps ** 2 * p2u - q ** 2 * u ** 2
   return sp.simplify(sp.expand(Ku))
 
 def err_bound(tf, k, vars, c, eps):
@@ -114,11 +114,11 @@ def err_bound(tf, k, vars, c, eps):
   equation = (1 - c) * (sigma2 + mu2) - sigma2
   equation = sp.simplify(sp.expand(equation))
   u = sp.symbols('u')
-  a = equation.coeff(u, 2)
-  b = equation.coeff(u, 1)
-  c = equation.coeff(u, 0)
+  # a = equation.coeff(u, 2)
+  # b = equation.coeff(u, 1)
+  # c = equation.coeff(u, 0)
   # print("delta = {}".format(b ** 2 - 4 * a * c))
-  # print(equation)
+  print(equation)
   return (sp.solve(equation, sp.symbols('u')))
 
 x = sps.Uniform('x', -2, 2)
