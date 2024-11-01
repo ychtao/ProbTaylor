@@ -1,5 +1,6 @@
 {
   open Parser
+  open Tilde
   exception Eof
 }
 rule token = parse 

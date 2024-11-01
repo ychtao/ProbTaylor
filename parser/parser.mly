@@ -1,3 +1,7 @@
+%{
+    open Tilde
+%}
+
 %token <float> CONST 
 %token PLUS MINUS TIMES DIV 
 %token LPAREN RPAREN
@@ -6,17 +10,17 @@
 %left TIMES DIV
 %nonassoc UMINUS 
 %start main
-%type <float> main 
+%type <Tilde.expr> main 
 %%
 main:
     expr EOL { $1 }
 ;
 expr:
-      CONST { $1 }
+      CONST { Const $1 }
     | LPAREN expr RPAREN { $2 }
-    | expr PLUS expr { $1 +. $3 }
-    | expr MINUS expr { $1 -. $3 }
-    | expr TIMES expr { $1 *. $3 }
-    | expr DIV expr { $1 /. $3 }
-    | MINUS expr %prec UMINUS { -. $2 }
+    | expr PLUS expr { Add ($1, $3) }
+    | expr MINUS expr { Min ($1, $3) }
+    | expr TIMES expr { Mul ($1, $3) }
+    | expr DIV expr { Div ($1, $3) }
+    | MINUS expr %prec UMINUS { Min (Const 0., $2) }
 ;
