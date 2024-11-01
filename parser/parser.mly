@@ -3,6 +3,7 @@
 %}
 
 %token <float> CONST 
+%token <string> VAR
 %token PLUS MINUS TIMES DIV 
 %token LPAREN RPAREN
 %token EOL
@@ -17,6 +18,7 @@ main:
 ;
 expr:
       CONST { Const $1 }
+    | VAR { Var $1 }
     | LPAREN expr RPAREN { $2 }
     | expr PLUS expr { Add ($1, $3) }
     | expr MINUS expr { Min ($1, $3) }
