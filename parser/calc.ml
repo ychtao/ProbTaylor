@@ -1,11 +1,14 @@
 open Tilde
 
 let _ = 
-  try 
-    let lexbuf = Lexing.from_channel stdin in 
-    while true do 
-        let result = Parser.main Lexer.token lexbuf in 
-          print_string (string_of_expr result); print_newline(); flush stdout
-    done
-  with Lexer.Eof -> 
-    exit 0
+  let in_file = "input.txt" in 
+  let in_channel = open_in in_file in 
+  let out_file = "output.txt" in 
+  let out_channel = open_out out_file in 
+  let lexbuf = Lexing.from_channel in_channel in 
+  let f = Parser.main Lexer.token lexbuf in 
+  let tf = fst (Tilde.tilde f) in 
+  Printf.fprintf out_channel "%s\n" (string_of_expr tf);
+  close_in in_channel;
+  close_out out_channel
+  
