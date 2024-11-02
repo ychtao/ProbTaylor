@@ -1,8 +1,9 @@
 open Tilde
 
 let _ = 
-  let in_file = "input.txt" in 
+  let in_file = "benchmarks/" ^ Sys.argv.(1) ^ ".txt" in 
   let in_channel = open_in in_file in 
+  let _ = input_line in_channel in 
   let out_file = "tilde.txt" in 
   let out_channel = open_out out_file in 
   let lexbuf = Lexing.from_channel in_channel in 

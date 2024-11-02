@@ -55,12 +55,14 @@ let rec tilde_aux (f : expr) (k0 : int) : expr * int =
 
 let tilde (f : expr) : expr * int = tilde_aux f 0
 
-let _ = 
-  let f = Div ((Add ((Mul (Var "x", Var "x")), Var "y"), (Add (Var "y", Var "z")))) in
+(* let _ = 
+  (* let f = Div ((Add ((Mul (Var "x", Var "x")), Var "y"), (Add (Var "y", Var "z")))) in *)
   (* let f = Div (Var "x", (Add (Var "x", Var "y"))) in *)
+  (* let f = Add (Div (Add (Var "x", Const 3.), Var "y"), Div (Var "y", Var "z")) in  *)
+  let f = Add (Var "x", Var "y") in 
   let (tf, k) = tilde f in
   let oc = open_out "tilde.txt" in 
   print_endline(string_of_expr f);
   Printf.fprintf oc "%s\n" (string_of_expr tf);  
   Printf.fprintf oc "%s\n" (string_of_int k);
-  close_out oc  
+  close_out oc   *)
