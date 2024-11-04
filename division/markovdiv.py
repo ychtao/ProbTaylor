@@ -105,14 +105,45 @@ def get_Ku(ps, q, pn_vars, k, eps):
   Ku = eps ** 2 * p2u - q ** 2 * u ** 2
   return sp.simplify(sp.expand(Ku))
 
+def get_psum(ps, pn_vars, k, eps):
+  psum = 0
+  for i in range(1, k + 1):
+    p = decomp_pos_neg(ps[i], pn_vars)
+    pp, pn = sep_pos_neg(p)
+    # print(i, pp, pn)
+    psum += pp + pn
+  return psum
+
 def err_bound(tf, k, vars, c, eps):
   pn_vars = vars_pos_neg(vars)
   ps, q = get_pq(tf, k)
+  if q == 1:
+    print("poly")
+    psum = get_psum(ps, pn_vars, k, eps)
+    print(psum)
+    
+    start = time.time()
+    psum_2 = sps.E(elim_pnprod(psum ** 2))
+    print("Second order result:", eps * ((psum_2 / (1-c)) ** (1/2)))
+    print("Second order time: ", time.time() - start)
+    
+    start = time.time()
+    psum_4 = sps.E(elim_pnprod(psum ** 4))
+    print("Fourth order result:", eps * ((psum_4 / (1-c)) ** (1/4)))
+    print("Fourth order time: ", time.time() - start)
+    
+    start = time.time()
+    psum_6 = sps.E(elim_pnprod(psum ** 6))
+    print("Sixth order result:", eps * ((psum_6 / (1-c)) ** (1/6)))
+    print("Sixth order time: ", time.time() - start)
+    
+    return 0
+  
   Ku = get_Ku(ps, q, pn_vars, k, eps)
   Ku = elim_pnprod(Ku)
-  print(Ku)
   mu = sps.E(Ku)
-
+  print("Ku computation done!")
+  
   # 2nd order method
   start = time.time()
   central_moment_2 = sps.E(elim_pnprod((Ku - mu) ** 2))
