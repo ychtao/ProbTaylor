@@ -145,29 +145,48 @@ def get_psum(ps, pn_vars, k, eps):
     psum += pp + pn
   return psum
 
+def get_h_from_psum(psum, pn_vars):
+  p = decomp_pos_neg(psum, pn_vars)
+  pp, pn = sep_pos_neg(p)
+  return pp + pn
+
 def err_bound(tf, k, vars, c, eps):
   pn_vars = vars_pos_neg(vars)
   ps, q = get_pq(tf, k)
   
   if q == 1:
     print("poly")
-    psum = get_psum(ps, pn_vars, k, eps)
+    psum = sum(ps.values())
+    print(ps)
     print(psum)
     
     start = time.time()
-    psum_2 = sps.E(elim_pnprod(psum ** 2))
-    print("Second order result:", eps * ((psum_2 / (1-c)) ** (1/2)))
+    psum2 = sp.expand(psum ** 2)
+    h2 = get_h_from_psum(psum2, pn_vars)
+    Eh2 = sps.E(elim_pnprod(h2))
+    print("Second order result:", eps * ((Eh2 / (1-c)) ** (1/2)))
     print("Second order time: ", time.time() - start)
     
     start = time.time()
-    psum_4 = sps.E(elim_pnprod(psum ** 4))
-    print("Fourth order result:", eps * ((psum_4 / (1-c)) ** (1/4)))
+    psum4 = sp.expand(psum ** 4)
+    h4 = get_h_from_psum(psum4, pn_vars)
+    Eh4 = sps.E(elim_pnprod(h4))
+    print("Fourth order result:", eps * ((Eh4 / (1-c)) ** (1/4)))
     print("Fourth order time: ", time.time() - start)
     
     start = time.time()
-    psum_6 = sps.E(elim_pnprod(psum ** 6))
-    print("Sixth order result:", eps * ((psum_6 / (1-c)) ** (1/6)))
+    psum6 = sp.expand(psum ** 6)
+    h6 = get_h_from_psum(psum6, pn_vars)
+    Eh6 = sps.E(elim_pnprod(h6))
+    print("Sixth order result:", eps * ((Eh6 / (1-c)) ** (1/6)))
     print("Sixth order time: ", time.time() - start)
+    
+    start = time.time()
+    psum8 = sp.expand(psum ** 8)
+    h8 = get_h_from_psum(psum8, pn_vars)
+    Eh8 = sps.E(elim_pnprod(h8))
+    print("Eighth order result:", eps * ((Eh8 / (1-c)) ** (1/8)))
+    print("Eighth order time: ", time.time() - start)
     
     return 0
   
