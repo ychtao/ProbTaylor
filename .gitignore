@@ -1,3 +1,4 @@
 *.txt
 temp.py
 unused/*
+*.out
