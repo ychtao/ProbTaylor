@@ -165,7 +165,7 @@ def err_bound(tf, k, vars, c, eps):
     h2 = get_h_from_psum(psum2, pn_vars)
     h2 = elim_pnprod(h2)
     print(len(h2.args))
-    Eh2 = sps.E(h2).evalf()
+    Eh2 = sps.E(h2)
     print("Second order result:", eps * ((Eh2 / (1-c)) ** (1/2)))
     print("Second order time: ", time.time() - start)
     
@@ -174,7 +174,7 @@ def err_bound(tf, k, vars, c, eps):
     h4 = get_h_from_psum(psum4, pn_vars)
     h4 = elim_pnprod(h4)
     print(len(h4.args)) 
-    Eh4 = sps.E(h4).evalf()
+    Eh4 = sps.E(h4)
     print("Fourth order result:", eps * ((Eh4 / (1-c)) ** (1/4)))
     print("Fourth order time: ", time.time() - start)
     
@@ -183,7 +183,7 @@ def err_bound(tf, k, vars, c, eps):
     h6 = get_h_from_psum(psum6, pn_vars)
     h6 = elim_pnprod(h6)
     print(len(h6.args))
-    Eh6 = sps.E(h6).evalf()
+    Eh6 = sps.E(h6)
     print("Sixth order result:", eps * ((Eh6 / (1-c)) ** (1/6)))
     print("Sixth order time: ", time.time() - start)
     
@@ -192,18 +192,18 @@ def err_bound(tf, k, vars, c, eps):
     h8 = get_h_from_psum(psum8, pn_vars)
     h8 = elim_pnprod(h8)
     print(len(h8.args))
-    Eh8 = sps.E(h8).evalf()
+    Eh8 = sps.E(h8)
     print("Eighth order result:", eps * ((Eh8 / (1-c)) ** (1/8)))
     print("Eighth order time: ", time.time() - start)
     
-    # start = time.time()
-    # psum16 = sp.expand(psum ** 16)
-    # h16 = get_h_from_psum(psum16, pn_vars)
-    # h16 = elim_pnprod(h16)
-    # print(len(h16.args))
-    # Eh16 = sps.E(h16)
-    # print("Sixteenth order result:", eps * ((Eh16 / (1-c)) ** (1/16)))
-    # print("Sixteenth order time: ", time.time() - start)
+    start = time.time()
+    psum16 = sp.expand(psum ** 16)
+    h16 = get_h_from_psum(psum16, pn_vars)
+    h16 = elim_pnprod(h16)
+    print(len(h16.args))
+    Eh16 = sps.E(h16)
+    print("Sixteenth order result:", eps * ((Eh16 / (1-c)) ** (1/16)))
+    print("Sixteenth order time: ", time.time() - start)
     
     return 0
   
@@ -260,9 +260,9 @@ for in_var in in_vars:
   var_name, var_range = in_var.split(":")
   var_names.append(var_name)
   params = var_range[var_range.find("(")+1:var_range.find(")")].split(",")
-  # exec(f"{var_name} = sps.Uniform(\'{var_name}\', {params[0]}, {params[1]})")
-  mean = (float(params[0]) + float(params[1])) / 2.0
-  exec(f"{var_name} = sps.Normal(\'{var_name}\', {mean}, 1)") # standard normal distribution
+  exec(f"{var_name} = sps.Uniform(\'{var_name}\', {params[0]}, {params[1]})")
+  # mean = (float(params[0]) + float(params[1])) / 2.0
+  # exec(f"{var_name} = sps.Normal(\'{var_name}\', {mean}, 1)") # standard normal distribution
   exec(f"vars.append({var_name})")
   local_dict[var_name] = eval(var_name)
 
