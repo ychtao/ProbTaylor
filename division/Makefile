@@ -9,4 +9,4 @@ all:
 	ocamlc -o calc tilde.cmo lexer.cmo parser.cmo calc.cmo 
 
 clean:
-	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli
+	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt
