@@ -28,22 +28,6 @@ def get_pq(tf, k):
     ps[i] = sp.expand(sp.simplify(hs[i] * q))
   return ps, q
   
-# def decomp_pos_neg(f, pnvars):
-#   if isinstance(f, sp.Pow):
-#     f1, p = f.args
-#     return decomp_pos_neg(f1, pnvars) * decomp_pos_neg(sp.Pow(f1, p-1), pnvars)
-#   elif isinstance(f, sp.Add):
-#     f1, f2 = f.args[0], f.args[1:]
-#     return decomp_pos_neg(f1, pnvars) + decomp_pos_neg(sum(f2), pnvars)
-#   elif isinstance(f, sp.Mul):
-#     f1, f2 = f.args[0], f.args[1:]
-#     return decomp_pos_neg(f1, pnvars) * decomp_pos_neg(reduce(sp.Mul, f2), pnvars)
-#   elif isinstance(f, (sp.Symbol, sps.rv.RandomSymbol)):
-#     x = f.name
-#     return (pnvars[x][0] - pnvars[x][1])
-#   else:
-#     return f
-  
 def decomp_pos_neg(f, pnvars):
   if isinstance(f, sp.Pow):
     f1, p = f.args 
@@ -260,7 +244,8 @@ for in_var in in_vars:
   var_name, var_range = in_var.split(":")
   var_names.append(var_name)
   params = var_range[var_range.find("(")+1:var_range.find(")")].split(",")
-  exec(f"{var_name} = sps.Uniform(\'{var_name}\', {params[0]}, {params[1]})")
+  low, high = params[0], params[1]
+  exec(f"{var_name} = sps.Uniform(\'{var_name}\', {low}, {high})")
   # mean = (float(params[0]) + float(params[1])) / 2.0
   # exec(f"{var_name} = sps.Normal(\'{var_name}\', {mean}, 1)") # standard normal distribution
   exec(f"vars.append({var_name})")
