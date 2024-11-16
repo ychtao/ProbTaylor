@@ -149,7 +149,7 @@ def err_bound(tf, k, vars, c, eps):
     h2 = get_h_from_psum(psum2, pn_vars)
     h2 = elim_pnprod(h2)
     print(len(h2.args))
-    Eh2 = sps.E(h2)
+    Eh2 = sps.E(h2).evalf()
     print("Second order result:", eps * ((Eh2 / (1-c)) ** (1/2)))
     print("Second order time: ", time.time() - start)
     
@@ -158,7 +158,7 @@ def err_bound(tf, k, vars, c, eps):
     h4 = get_h_from_psum(psum4, pn_vars)
     h4 = elim_pnprod(h4)
     print(len(h4.args)) 
-    Eh4 = sps.E(h4)
+    Eh4 = sps.E(h4).evalf()
     print("Fourth order result:", eps * ((Eh4 / (1-c)) ** (1/4)))
     print("Fourth order time: ", time.time() - start)
     
@@ -167,7 +167,7 @@ def err_bound(tf, k, vars, c, eps):
     h6 = get_h_from_psum(psum6, pn_vars)
     h6 = elim_pnprod(h6)
     print(len(h6.args))
-    Eh6 = sps.E(h6)
+    Eh6 = sps.E(h6).evalf()
     print("Sixth order result:", eps * ((Eh6 / (1-c)) ** (1/6)))
     print("Sixth order time: ", time.time() - start)
     
@@ -176,7 +176,7 @@ def err_bound(tf, k, vars, c, eps):
     h8 = get_h_from_psum(psum8, pn_vars)
     h8 = elim_pnprod(h8)
     print(len(h8.args))
-    Eh8 = sps.E(h8)
+    Eh8 = sps.E(h8).evalf()
     print("Eighth order result:", eps * ((Eh8 / (1-c)) ** (1/8)))
     print("Eighth order time: ", time.time() - start)
     
@@ -185,7 +185,7 @@ def err_bound(tf, k, vars, c, eps):
     h16 = get_h_from_psum(psum16, pn_vars)
     h16 = elim_pnprod(h16)
     print(len(h16.args))
-    Eh16 = sps.E(h16)
+    Eh16 = sps.E(h16).evalf()
     print("Sixteenth order result:", eps * ((Eh16 / (1-c)) ** (1/16)))
     print("Sixteenth order time: ", time.time() - start)
     
@@ -226,11 +226,16 @@ def err_bound(tf, k, vars, c, eps):
   
   return 0
 
-# x = sps.Uniform('x', -2, 2)
-# y = sps.Uniform('y', 1, 2)
-# z = sps.Uniform('z', 1, 2)
-# vars = (x, y, z)
-# local_dict = {"x" : x, "y" : y, "z" : z}
+def trunc_norm(name, a, b):
+  mu = 0 if a < 0 and b > 0 else a 
+  sigma = 1
+  ND = sps.Normal(name, mu, sigma)
+  pdf = sps.density(ND)
+  cdf = sps.cdf(ND)
+  x = sp.Symbol(name)
+  pdf_truncated = 1 / sigma * pdf((x-mu)/sigma) / (cdf((b-mu)/sigma) - cdf((a-mu)/sigma))
+  return sps.ContinuousRV(sp.Symbol(name), pdf_truncated, set = sp.Interval(a, b))
+  
 
 in_file = "benchmarks/" + sys.argv[1] + ".txt"
 with open(in_file, "r") as f:
@@ -245,7 +250,9 @@ for in_var in in_vars:
   var_names.append(var_name)
   params = var_range[var_range.find("(")+1:var_range.find(")")].split(",")
   low, high = params[0], params[1]
-  exec(f"{var_name} = sps.Uniform(\'{var_name}\', {low}, {high})")
+  # exec(f"{var_name} = sps.Uniform(\'{var_name}\', {low}, {high})")
+  exec(f"{var_name} = trunc_norm(\'{var_name}\', {low}, {high})")
+  
   # mean = (float(params[0]) + float(params[1])) / 2.0
   # exec(f"{var_name} = sps.Normal(\'{var_name}\', {mean}, 1)") # standard normal distribution
   exec(f"vars.append({var_name})")
