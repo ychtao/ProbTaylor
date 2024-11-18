@@ -20,12 +20,12 @@ def get_pq(tf, k):
   hs, ps = {}, {}
   for i in range(1, k + 1):
     h = sp.diff(tf, sp.symbols(f'e{i}'))
-    h = sp.simplify(h.subs(e_vals).subs(d_vals))
+    h = h.subs(e_vals).subs(d_vals)
     hs[i] = h
     ret += h * sp.symbols(f'e{i}')
   p, q = ret.as_numer_denom()
   for i in range(1, k + 1):
-    ps[i] = sp.expand(sp.simplify(hs[i] * q))
+    ps[i] = sp.expand((hs[i] * q))
   return ps, q
   
 def decomp_pos_neg(f, pnvars):
@@ -79,11 +79,13 @@ def sep_pos_neg(f):
   return fp, fn
 
 def elim_pnprod(tf):
-  tf = sp.expand(sp.simplify(tf))
+  # tf = sp.expand(sp.simplify(tf))
+  tf = sp.expand(tf)
   if not isinstance(tf, sp.Add):
     return tf
   ret = 0
   for term in tf.args:
+    # print(term)
     if isinstance(term, sp.Mul):
       zero_flag = False
       flags = {}
@@ -137,19 +139,24 @@ def get_h_from_psum(psum, pn_vars):
 def err_bound(tf, k, vars, c, eps):
   pn_vars = vars_pos_neg(vars)
   ps, q = get_pq(tf, k)
+  # for (key, value) in ps.items():
+  #   print(key, value) 
   
   if q == 1:
     print("poly")
     psum = sum(ps.values())
-    print(ps)
-    print(psum)
     
     start = time.time()
     psum2 = sp.expand(psum ** 2)
     h2 = get_h_from_psum(psum2, pn_vars)
-    h2 = elim_pnprod(h2)
+    h2 = elim_pnprod(h2) # seems to be buggy, but does not affect the result
     print(len(h2.args))
+    for term in h2.args:
+      print(term)
+      print(sps.E(term).evalf())
+      print()
     Eh2 = sps.E(h2).evalf()
+    print(Eh2)
     print("Second order result:", eps * ((Eh2 / (1-c)) ** (1/2)))
     print("Second order time: ", time.time() - start)
     
@@ -229,12 +236,14 @@ def err_bound(tf, k, vars, c, eps):
 def trunc_norm(name, a, b):
   mu = 0 if a < 0 and b > 0 else a 
   sigma = 1
-  ND = sps.Normal(name, mu, sigma)
+  ND = sps.Normal('ND', mu, sigma)
   pdf = sps.density(ND)
   cdf = sps.cdf(ND)
   x = sp.Symbol(name)
-  pdf_truncated = 1 / sigma * pdf((x-mu)/sigma) / (cdf((b-mu)/sigma) - cdf((a-mu)/sigma))
-  return sps.ContinuousRV(sp.Symbol(name), pdf_truncated, set = sp.Interval(a, b))
+  pdf_inrange = 1 / sigma * pdf((x-mu)/sigma) / (cdf((b-mu)/sigma) - cdf((a-mu)/sigma))
+  pdf_truncated = sp.Piecewise((pdf_inrange, (x >= a) & (x <= b)), (0, True))
+  # return sps.ContinuousRV(sp.Symbol(name), pdf_truncated, set = sp.Interval(a, b), check = True)
+  return sps.ContinuousRV(sp.Symbol(name), pdf_truncated, check = True)
   
 
 in_file = "benchmarks/" + sys.argv[1] + ".txt"
