@@ -66,14 +66,3 @@ let process_input filename =
   match expr with 
   | Some expr -> let f = expr_parser expr in (vardecs_parser vardecs, f)
   | None -> failwith "No expression found"
-
-
-(* let () =
-  let filename = "Example.txt" in
-  let (declarations, expression) = process_input filename in
-  List.iter (fun (var, range_type, lower_bound, upper_bound) ->
-    printf "(%s, %s, %s, %s)\n" var range_type lower_bound upper_bound
-  ) declarations;
-  match expression with
-  | Some expr -> printf "Expression: %s\n" expr
-  | None -> printf "No expression found\n" *)

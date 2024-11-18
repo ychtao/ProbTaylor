@@ -6,12 +6,16 @@ type distr =
 type expr = 
 | Const of float 
 | Var of string
-| Evar of int
-| Dvar of int
 | Add of expr * expr 
 | Min of expr * expr 
 | Mul of expr * expr 
 | Div of expr * expr
+(* the following constructors only to be used internally *)
+| Evar of int (* e_i *)
+| Dvar of int (* d_i *)
+| Exp of expr * int 
+| Pvar of string (* x+ *)
+| Nvar of string (* x- *)
 
 type rv = 
 | Rv of string 
@@ -38,6 +42,9 @@ let rec string_of_expr (f : expr) : string =
   | Min (f1, f2) -> "(" ^ string_of_expr f1 ^ " - " ^ string_of_expr f2 ^ ")"
   | Mul (f1, f2) -> "(" ^ string_of_expr f1 ^ " * " ^ string_of_expr f2 ^ ")"
   | Div (f1, f2) -> "(" ^ string_of_expr f1 ^ " / " ^ string_of_expr f2 ^ ")"
+  | Pvar x -> x ^ "+"
+  | Nvar x -> x ^ "-"
+  | Exp (f, n) -> "(" ^ string_of_expr f ^ ")^" ^ string_of_int n
 
 let string_of_rv (rv : rv) : string = 
   match rv with 

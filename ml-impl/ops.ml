@@ -72,10 +72,26 @@ let rec simplify_aux (f : expr) : expr =
   | Div (f1, f2) -> Div (simplify_aux f1, simplify_aux f2)
   | _ -> f
 
-(* iteratively apply simpl_zero_aux to an expression until no change *)
+(* iteratively apply simplify_aux to an expression until no change *)
 let rec simplify (f : expr) : expr =
   let f' = simplify_aux f in 
   if f = f' then f else simplify f'
+
+let rec diff_ei (tf : expr) (i : int) : expr = 
+  match tf with 
+  | Const c -> Const 0.
+  | Var x -> Const 0.
+  | Evar k -> if k = i then Const 1. else Const 0.
+  | Dvar k -> Const 0.
+  | Add (f1, f2) -> Add (diff_ei f1 i, diff_ei f2 i)
+  | Min (f1, f2) -> Min (diff_ei f1 i, diff_ei f2 i)
+  | Mul (f1, f2) -> Add (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i))
+  | Div (f1, f2) -> Div (Min (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i)), Mul (f2, f2))
+  | _ -> failwith "Not supported"
+
+let rec sum_of_ei_diffs (tf : expr) (k : int) : expr =
+  if k = 0 then Const 0.
+  else Add (simplify (set_err_to_zero (diff_ei tf k)), sum_of_ei_diffs tf (k - 1))
 
 (* assume no error variables or division *)
 let rec expand_expr (f : expr) : expanded_expr = 
@@ -92,18 +108,12 @@ let rec expand_expr (f : expr) : expanded_expr =
         (c1 *. c2, vars1 @ vars2)
       ) terms2
     ) terms1)
+  | Pvar x -> [(1.0, [(Prv x, 1)])]
+  | Nvar x -> [(1.0, [(Nrv x, 1)])]
+  | Exp (Var x, n) -> [(1.0, [(Rv x, n)])]
+  | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
+  | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
   | _ -> failwith "Not supported"
-
-let rec diff_ei (tf : expr) (i : int) : expr = 
-  match tf with 
-  | Const c -> Const 0.
-  | Var x -> Const 0.
-  | Evar k -> if k = i then Const 1. else Const 0.
-  | Dvar k -> Const 0.
-  | Add (f1, f2) -> Add (diff_ei f1 i, diff_ei f2 i)
-  | Min (f1, f2) -> Min (diff_ei f1 i, diff_ei f2 i)
-  | Mul (f1, f2) -> Add (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i))
-  | Div (f1, f2) -> Div (Min (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i)), Mul (f2, f2))
 
 (* Normalize a term - combine same variables, sort in alphabetical order *)
 let normalize_term (c, vars) =
@@ -148,3 +158,20 @@ let eliminate_zero_terms (f : expanded_expr) : expanded_expr =
 
 let simplify_expanded_expr (f : expanded_expr) : expanded_expr = 
   f |> normalize_expanded_expr |> merge_terms |> eliminate_zero_terms
+
+let expand_and_simplify (f : expr) : expanded_expr = 
+  simplify_expanded_expr (expand_expr f)
+
+let separate_term (t : term) : expanded_expr =
+  let (c, rvs) = t in 
+  let sep_pn_rv (v, n) =
+    match v with 
+    | Rv v -> if n = 0 then Const 1.
+              else if n = 1 then Min (Pvar v, Nvar v)
+              else if n mod 2 = 0 then Exp (Var v, n)
+              else Mul (Exp (Var v, n-1), Min (Pvar v, Nvar v))
+    | _ -> failwith "Already separated"
+  in expand_and_simplify (List.fold_left (fun acc rv -> Mul (acc, sep_pn_rv rv)) (Const c) rvs)
+
+let separate_expanded_expr (f : expanded_expr) : expanded_expr = 
+  simplify_expanded_expr (List.flatten (List.map separate_term f))
