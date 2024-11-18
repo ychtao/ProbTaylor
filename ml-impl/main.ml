@@ -10,7 +10,8 @@ let _ =
   let sod = sum_of_ei_diffs tf k in 
   let sod = expand_and_simplify sod in 
   let sod = separate_expanded_expr sod in
-  printf "sum of ei diffs : %s\n" (string_of_expanded_expr sod)
+  let sod = invert_negative_term sod in 
+  printf "%s\n" (string_of_expanded_expr sod)
   (* let h1 = simplify (set_err_to_zero (diff_ei tf 1)) in
   let h2 = simplify (set_err_to_zero (diff_ei tf 2)) in
   let h3 = simplify (set_err_to_zero (diff_ei tf 3)) in

@@ -175,3 +175,15 @@ let separate_term (t : term) : expanded_expr =
 
 let separate_expanded_expr (f : expanded_expr) : expanded_expr = 
   simplify_expanded_expr (List.flatten (List.map separate_term f))
+
+(* assume that rv (not prv or nrv) are all even power *)
+let is_positive_term (t : term) : bool = 
+  let (c, rvs) = t in 
+  let num_of_negs = List.fold_left (fun acc rv -> match rv with 
+    | (Nrv _, n) -> if n mod 2 = 1 then acc + 1 else acc
+    | (Rv _, n) -> if n mod 2 = 1 then failwith "Not all even power" else acc
+    | _ -> acc ) (if c < 0. then 1 else 0) rvs in 
+  if num_of_negs mod 2 = 0 then true else false 
+
+let invert_negative_term (f : expanded_expr) : expanded_expr = 
+  List.map (fun (c, rvs) -> if is_positive_term (c, rvs) then (c, rvs) else (-.c, rvs)) f
