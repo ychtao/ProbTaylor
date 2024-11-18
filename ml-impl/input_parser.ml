@@ -40,6 +40,20 @@ let file_to_vardecs_expr filename =
         process_lines rest vardecs (Some line)
   in process_lines lines [] None
 
+let vardec_tuple_to_distr (name, distribution, low, hi) = 
+  match distribution with 
+  | "U" -> Uniform (low, hi)
+  | "N" -> Normal (low, hi)
+  | "E" -> Exponential (low, hi)
+  | _ -> failwith "Invalid variable declaration"  
+
+let vardecs_parser vardecs =
+  let vars = Hashtbl.create 20 in 
+  List.iter (fun (name, distribution, low, hi) -> 
+    Hashtbl.add vars name (vardec_tuple_to_distr (name, distribution, low, hi));
+    (* printf "(%s, %s, %f, %f)\n" name distribution low hi *)
+  ) vardecs; vars
+
 let expr_parser expr = 
   let lexbuf = Lexing.from_string expr in 
   try 
@@ -50,7 +64,7 @@ let expr_parser expr =
 let process_input filename = 
   let (vardecs, expr) = file_to_vardecs_expr filename in 
   match expr with 
-  | Some expr -> let f = expr_parser expr in (vardecs, f)
+  | Some expr -> let f = expr_parser expr in (vardecs_parser vardecs, f)
   | None -> failwith "No expression found"
 
 
