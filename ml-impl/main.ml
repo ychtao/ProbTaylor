@@ -1,6 +1,8 @@
+open Expr
 open Input_parser
+open Printf
 
 let _ = 
   let filename = "Example.txt" in 
   let (vardecs, f) = process_input filename in 
-  printf string_of_expr f
+  printf "%s\n" (string_of_expr f);

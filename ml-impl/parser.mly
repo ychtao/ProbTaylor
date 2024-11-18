@@ -1,5 +1,5 @@
 %{
-    open Tilde
+    open Expr
 %}
 
 %token <float> CONST 
@@ -11,7 +11,7 @@
 %left TIMES DIV
 %nonassoc UMINUS 
 %start main
-%type <Tilde.expr> main 
+%type <Expr.expr> main 
 %%
 main:
     expr EOL { $1 }

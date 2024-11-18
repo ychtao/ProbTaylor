@@ -1,6 +1,6 @@
 {
   open Parser
-  open Tilde
+  open Expr
   exception Eof
 }
 rule token = parse 
@@ -14,4 +14,4 @@ rule token = parse
   | '/' { DIV }
   | '(' { LPAREN }
   | ')' { RPAREN }
-  | eof { raise Eof }
+  | eof { EOL }

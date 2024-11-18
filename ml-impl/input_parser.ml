@@ -40,11 +40,18 @@ let file_to_vardecs_expr filename =
         process_lines rest vardecs (Some line)
   in process_lines lines [] None
 
+let expr_parser expr = 
+  let lexbuf = Lexing.from_string expr in 
+  try 
+    let result = Parser.main Lexer.token lexbuf in result 
+  with 
+  | _ -> failwith "Invalid input expression"
+
 let process_input filename = 
   let (vardecs, expr) = file_to_vardecs_expr filename in 
-  let lexbuf = Lexing.from_string expr in 
-  let f = Parser.main Lexer.token lexbuf in 
-  (vardecs, f)
+  match expr with 
+  | Some expr -> let f = expr_parser expr in (vardecs, f)
+  | None -> failwith "No expression found"
 
 
 (* let () =
