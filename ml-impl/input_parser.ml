@@ -1,4 +1,5 @@
 open Printf
+open Expr
 
 let file_to_lines filename =
   let ic = open_in filename in
@@ -22,11 +23,11 @@ let process_vardec line =
       let bounds = String.split_on_char ',' (String.sub (List.nth range_parts 1) 0 (String.length (List.nth range_parts 1) - 1)) in
       let lower_bound = String.trim (List.hd bounds) in
       let upper_bound = String.trim (List.nth bounds 1) in
-      (String.trim var, range_type, lower_bound, upper_bound)
+      (String.trim var, range_type, float_of_string lower_bound, float_of_string upper_bound)
     | _ -> failwith "Invalid variable declaration"
   with _ -> failwith "Invalid variable declaration"
 
-let process_input filename = 
+let file_to_vardecs_expr filename = 
   let lines = file_to_lines filename in 
   let rec process_lines lines vardecs expr =
     match lines with 
@@ -38,6 +39,13 @@ let process_input filename =
       else
         process_lines rest vardecs (Some line)
   in process_lines lines [] None
+
+let process_input filename = 
+  let (vardecs, expr) = file_to_vardecs_expr filename in 
+  let lexbuf = Lexing.from_string expr in 
+  let f = Parser.main Lexer.token lexbuf in 
+  (vardecs, f)
+
 
 (* let () =
   let filename = "Example.txt" in
