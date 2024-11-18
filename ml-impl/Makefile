@@ -6,9 +6,9 @@ all:
 	ocamlc -c lexer.ml
 	ocamlc -c parser.ml
 	ocamlc -c input_parser.ml
-	ocamlc -c expr_op.ml
+	ocamlc -c ops.ml
 	ocamlc -c main.ml
-	ocamlc -o a.out lexer.cmo parser.cmo expr.cmo input_parser.cmo expr_op.cmo main.cmo 
+	ocamlc -o a.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo main.cmo 
 
 clean:
 	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt
