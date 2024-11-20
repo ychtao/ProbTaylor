@@ -21,7 +21,7 @@ let _ =
   printf "h3 : %s\n" (string_of_expr h3) *)
 
 let _ = 
-  let f = expr_parser "x * (x * x + y + z)" in 
+  let f = expr_parser "x * (x * x + y + z) - x * z" in 
   let f = expand_and_simplify f in 
   let f = separate_expanded_expr f in 
   printf "expanded and simplified : %s\n" (string_of_expanded_expr f)

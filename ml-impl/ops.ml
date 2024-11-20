@@ -1,6 +1,12 @@
 open Expr
 open Printf
 
+let rv_to_name_no_sign (rv : rv) : string = 
+  match rv with 
+  | Rv x -> x
+  | Prv x -> x
+  | Nrv x -> x
+
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)
@@ -125,15 +131,16 @@ let normalize_term (c, vars) =
     ) vars;
     Hashtbl.fold (fun v e acc -> (v, e) :: acc) tbl []
   in
-  let compare_vars (v1, _) (v2, _) =
-    match (v1, v2) with
-    | (Rv x1, Rv x2) -> String.compare x1 x2
+  let compare_vars (v1, _) (v2, _) = 
+    let cmp = String.compare (rv_to_name_no_sign v1) (rv_to_name_no_sign v2) in
+    if cmp <> 0 then cmp else match (v1, v2) with
+    | (Rv _, Rv _) -> 0
     | (Rv _, _) -> -1
     | (_, Rv _) -> 1
-    | (Prv x1, Prv x2) -> String.compare x1 x2
+    | (Prv _, Prv _) -> 0
     | (Prv _, _) -> -1
     | (_, Prv _) -> 1
-    | (Nrv x1, Nrv x2) -> String.compare x1 x2
+    | (Nrv _, Nrv _) -> 0
   in
   let combined_vars = combine_vars vars in
   let sorted_vars = List.sort compare_vars combined_vars in
