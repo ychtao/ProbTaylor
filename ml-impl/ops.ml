@@ -1,31 +1,6 @@
 open Expr
 open Printf
 
-let rv_to_name_no_sign (rv : rv) : string = 
-  match rv with 
-  | Rv x -> x
-  | Prv x -> x
-  | Nrv x -> x
-
-let rv_to_expr (rv : rv) : expr = 
-  match rv with 
-  | Rv x -> Var x
-  | Prv x -> Pvar x
-  | Nrv x -> Nvar x
-
-let rvn_to_expr (rv, n) : expr = 
-  let rv_expr = rv_to_expr rv in 
-  if n = 1 then rv_expr
-  else List.fold_left (fun acc _ -> Mul (acc, rv_expr)) rv_expr (List.init (n - 1) (fun _ -> rv_expr))
-
-let term_to_expr (t : term) : expr = 
-  let (c, rvs) = t in 
-  let rvs_expr = List.map rvn_to_expr rvs in
-  List.fold_left (fun acc rv_expr -> Mul (acc, rv_expr)) (Const c) rvs_expr
-
-let expanded_expr_to_expr (f : expanded_expr) : expr = 
-  List.fold_left (fun acc t -> Add (acc, term_to_expr t)) (Const 0.) f
-
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)
