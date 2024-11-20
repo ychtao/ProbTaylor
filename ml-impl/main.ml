@@ -12,16 +12,11 @@ let _ =
   let sod = separate_expanded_expr sod in
   let sod = invert_negative_term sod in 
   printf "%s\n" (string_of_expanded_expr sod)
-  (* let h1 = simplify (set_err_to_zero (diff_ei tf 1)) in
-  let h2 = simplify (set_err_to_zero (diff_ei tf 2)) in
-  let h3 = simplify (set_err_to_zero (diff_ei tf 3)) in
-  printf "tilde f : %s\n" (string_of_expr tf);
-  printf "h1 : %s\n" (string_of_expr h1);
-  printf "h2 : %s\n" (string_of_expr h2);
-  printf "h3 : %s\n" (string_of_expr h3) *)
 
 let _ = 
   let f = expr_parser "x * (x * x + y + z) - x * z" in 
   let f = expand_and_simplify f in 
   let f = separate_expanded_expr f in 
-  printf "expanded and simplified : %s\n" (string_of_expanded_expr f)
+  printf "expanded_expr: %s\n" (string_of_expanded_expr f);
+  let f = expand_and_simplify (expanded_expr_to_expr f) in
+  printf "expr : %s\n" (string_of_expanded_expr f)
