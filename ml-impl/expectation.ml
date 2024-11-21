@@ -49,11 +49,42 @@ let uniform_expectation_of_two_rvs (rv1 : (rv * int)) (rv2 : (rv * int)) (low : 
   | (Nrv _, Prv _) -> 0.
   | (Nrv _, Nrv _) -> uniform_nth_moment_neg (n1 + n2) low high
 
+let standard_normal_pdf (x : float) : float = 
+  1. /. (sqrt (2. *. Float.pi)) *. (exp (-. (x ** 2.) /. 2.))
+
+let erf x =
+  let t = 1.0 /. (1.0 +. 0.5 *. abs_float x) in
+  let tau = t *. exp (-.x *. x -. 1.26551223 +.
+    t *. (1.00002368 +. t *. (0.37409196 +. t *. (0.09678418 +. t *. (-.0.18628806 +.
+    t *. (0.27886807 +. t *. (-.1.13520398 +. t *. (1.48851587 +. t *. (-.0.82215223 +. t *. 0.17087277))))))))) in
+  if x >= 0.0 then 1.0 -. tau else tau -. 1.0
+
+let standard_normal_cdf (x : float) : float = 
+  0.5 *. (1.0 +. erf (x /. sqrt 2.0))
+
+let rec normal_nth_moment (n : int) (low : float) (high : float) : float = 
+  if n = 0 then 1.
+  else if n = 1 then (standard_normal_pdf low -. standard_normal_pdf high) /. (standard_normal_cdf high -. standard_normal_cdf low)
+  else let num = low ** (float_of_int (n - 1)) *. standard_normal_pdf low -. high ** (float_of_int (n - 1)) *. standard_normal_pdf high in
+       let den = standard_normal_cdf high -. standard_normal_cdf low in
+       num /. den +. (float_of_int n -. 1.) *. normal_nth_moment (n - 2) low high
+
+(* NEED TO DEBUG THIS *)
+let rec normal_nth_moment_pos (n : int) (low : float) (high : float) : float = 
+  if low >= 0. then normal_nth_moment n low high
+  else if high <= 0. then 0.
+  else if n = 0 then 1.
+  else if n = 1 then (standard_normal_pdf 0. -. standard_normal_pdf high) /. (standard_normal_cdf high -. standard_normal_cdf low)
+  else let num = (-. high ** (float_of_int (n - 1))) *. standard_normal_pdf high in 
+       let den = standard_normal_cdf high -. standard_normal_cdf low in
+        num /. den +. (float_of_int n -. 1.) *. normal_nth_moment_pos (n - 2) low high
+
 let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((rv * int) list)) option =
   match rvs with 
   | [] -> None 
   | (rv, n) :: rest -> if (rv_to_name_no_sign rv) = name then Some ((rv, n), rest) else None
 
+(* Assume no three consecutive vars with same name *)
 let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hashtbl.t) : float = 
   match rvs with 
   | [] -> 1. 
