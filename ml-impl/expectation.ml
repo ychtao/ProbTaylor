@@ -50,7 +50,7 @@ let uniform_expectation_of_two_rvs (rv1 : (rv * int)) (rv2 : (rv * int)) (low : 
   | (Nrv _, Nrv _) -> uniform_nth_moment_neg (n1 + n2) low high
 
 let standard_normal_pdf (x : float) : float = 
-  1. /. (sqrt (2. *. Float.pi)) *. (exp (-. (x ** 2.) /. 2.))
+  1. /. (sqrt (2. *. Float.pi)) *. (exp (-0.5 *. x *. x))
 
 let erf x =
   let t = 1.0 /. (1.0 +. 0.5 *. abs_float x) in
@@ -69,15 +69,23 @@ let rec normal_nth_moment (n : int) (low : float) (high : float) : float =
        let den = standard_normal_cdf high -. standard_normal_cdf low in
        num /. den +. (float_of_int n -. 1.) *. normal_nth_moment (n - 2) low high
 
-(* NEED TO DEBUG THIS *)
 let rec normal_nth_moment_pos (n : int) (low : float) (high : float) : float = 
   if low >= 0. then normal_nth_moment n low high
   else if high <= 0. then 0.
-  else if n = 0 then 1.
+  else if n = 0 then (standard_normal_cdf high -. standard_normal_cdf 0.) /. (standard_normal_cdf high -. standard_normal_cdf low)
   else if n = 1 then (standard_normal_pdf 0. -. standard_normal_pdf high) /. (standard_normal_cdf high -. standard_normal_cdf low)
-  else let num = (-. high ** (float_of_int (n - 1))) *. standard_normal_pdf high in 
+  else let num = -. (high ** (float_of_int (n - 1))) *. standard_normal_pdf high in 
        let den = standard_normal_cdf high -. standard_normal_cdf low in
-        num /. den +. (float_of_int n -. 1.) *. normal_nth_moment_pos (n - 2) low high
+        num /. den +. (float_of_int (n - 1)) *. normal_nth_moment_pos (n - 2) low high
+
+let rec normal_nth_moment_neg (n : int) (low : float) (high : float) : float = 
+  if high <= 0. then -. (normal_nth_moment n low high)
+  else if low >= 0. then 0.
+  else if n = 0 then (standard_normal_cdf 0. -. standard_normal_cdf low) /. (standard_normal_cdf high -. standard_normal_cdf low)
+  else if n = 1 then (standard_normal_pdf 0. -. standard_normal_pdf low) /. (standard_normal_cdf high -. standard_normal_cdf low)
+  else let num = (-1.) ** (float_of_int n) *. low ** (float_of_int (n - 1)) *. standard_normal_pdf low in
+       let den = standard_normal_cdf high -. standard_normal_cdf low in
+       num /. den +. (float_of_int (n - 1)) *. normal_nth_moment_neg (n - 2) low high
 
 let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((rv * int) list)) option =
   match rvs with 

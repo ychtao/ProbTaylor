@@ -25,9 +25,9 @@ let _ =
   printf "%f\n" e1; printf "%f\n" e2
 
 let _ =
-  let a = normal_nth_moment_pos 2 (-3.) 1. in 
-  let b = normal_nth_moment_pos 3 (-1.) 2. in 
-  let c = normal_nth_moment_pos 4 (-2.) 3. in
+  let a = normal_nth_moment_neg 2 (-2.) 5. in 
+  let b = normal_nth_moment_neg 3 (-2.) 5. in 
+  let c = normal_nth_moment_neg 4 (-2.) 5. in
   print_endline (string_of_float a);
   print_endline (string_of_float b);
   print_endline (string_of_float c)
