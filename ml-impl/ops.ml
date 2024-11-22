@@ -154,8 +154,21 @@ let merge_terms (f : expanded_expr) : expanded_expr =
   ) f;
   Hashtbl.fold (fun vars c acc -> (c, vars) :: acc) tbl []
 
+let rec is_zero_rvs (rvs : (rv * int) list) : bool =
+  match rvs with 
+  | (rv1, n1) :: (rv2, n2) :: rest -> (match rv1, rv2 with 
+    | (Prv name1, Nrv name2) -> 
+      if name1 = name2 then true else is_zero_rvs ((rv2, n2) :: rest)
+    | (Nrv name1, Prv name2) -> 
+      if name1 = name2 then true else is_zero_rvs ((rv2, n2) :: rest)
+    | _ -> is_zero_rvs ((rv2, n2) :: rest))
+  | _ -> false 
+
+let is_zero_term (t : term) : bool =
+  let (c, rvs) = t in c = 0.0 || is_zero_rvs rvs
+
 let eliminate_zero_terms (f : expanded_expr) : expanded_expr =
-  List.filter (fun (c, _) -> c <> 0.0) f
+  List.filter (fun t -> not (is_zero_term t)) f
 
 let simplify_expanded_expr (f : expanded_expr) : expanded_expr = 
   f |> normalize_expanded_expr |> merge_terms |> eliminate_zero_terms
@@ -178,13 +191,22 @@ let separate_expanded_expr (f : expanded_expr) : expanded_expr =
   simplify_expanded_expr (List.flatten (List.map separate_term f))
 
 (* assume that rv (not prv or nrv) are all even power *)
-let is_positive_term (t : term) : bool = 
+(* let is_positive_term (t : term) : bool = 
   let (c, rvs) = t in 
   let num_of_negs = List.fold_left (fun acc rv -> match rv with 
     | (Nrv _, n) -> if n mod 2 = 1 then acc + 1 else acc
     | (Rv _, n) -> if n mod 2 = 1 then failwith "Not all even power" else acc
     | _ -> acc ) (if c < 0. then 1 else 0) rvs in 
-  if num_of_negs mod 2 = 0 then true else false 
+  if num_of_negs mod 2 = 0 then true else false  *)
+
+(* let invert_negative_term (f : expanded_expr) : expanded_expr = 
+  List.map (fun (c, rvs) -> if is_positive_term (c, rvs) then (c, rvs) else (-.c, rvs)) f *)
 
 let invert_negative_term (f : expanded_expr) : expanded_expr = 
-  List.map (fun (c, rvs) -> if is_positive_term (c, rvs) then (c, rvs) else (-.c, rvs)) f
+  List.map (fun (c, rvs) -> if c >= 0. then (c, rvs) else (-. c, rvs)) f
+
+let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
+  if n = 1 then f else 
+  let f = expanded_expr_to_expr f in 
+  let f' = List.fold_left (fun acc _ -> Mul (acc, f)) f (List.init (n - 1) (fun _ -> f)) in
+  expand_and_simplify f'
