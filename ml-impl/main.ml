@@ -11,7 +11,7 @@ let bound1 filename eps c order =
   let p = invert_negative_term (separate_expanded_expr (expand_and_simplify sod)) in
   let pn = power_of_expanded_expr p order in
   let esod = expectation_of_expanded_expr pn vars in
-  let bound = eps *. (esod /. (1. -. c)) ** (1. /. (float_of_int order)) in
+  let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
 
 let _ = 

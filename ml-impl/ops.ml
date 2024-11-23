@@ -205,8 +205,18 @@ let separate_expanded_expr (f : expanded_expr) : expanded_expr =
 let invert_negative_term (f : expanded_expr) : expanded_expr = 
   List.map (fun (c, rvs) -> if c >= 0. then (c, rvs) else (-. c, rvs)) f
 
-let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
+let power_of_expanded_expr_aux (f : expanded_expr) (n : int) : expanded_expr = 
   if n = 1 then f else 
   let f = expanded_expr_to_expr f in 
   let f' = List.fold_left (fun acc _ -> Mul (acc, f)) f (List.init (n - 1) (fun _ -> f)) in
   expand_and_simplify f'
+
+let rec  power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
+  if n = 1 then f 
+  else if n mod 2 = 0 then 
+    let f' = power_of_expanded_expr_aux f 2 in 
+    power_of_expanded_expr f' (n / 2)
+  else if n mod 3 = 0 then 
+    let f' = power_of_expanded_expr_aux f 3 in
+    power_of_expanded_expr f' (n / 3)
+  else  power_of_expanded_expr_aux f n
