@@ -3,6 +3,7 @@ open Input_parser
 open Printf
 open Ops
 open Expectation
+open Unix
 
 let bound1 filename eps c order = 
   let (vars, f) = process_input filename in 
@@ -19,5 +20,8 @@ let _ =
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
   let order = int_of_string Sys.argv.(2) in 
+  let start_time = Unix.gettimeofday () in
   let bound = bound1 filename eps c order in 
-  print_endline (string_of_float bound)
+  print_endline ("First order error bound = " ^ (string_of_float bound));
+  let elapsed_time = Unix.gettimeofday () -. start_time in
+  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds")
