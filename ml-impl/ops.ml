@@ -87,7 +87,7 @@ let rec diff_ei (tf : expr) (i : int) : expr =
   | Min (f1, f2) -> Min (diff_ei f1 i, diff_ei f2 i)
   | Mul (f1, f2) -> Add (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i))
   | Div (f1, f2) -> Div (Min (Mul (diff_ei f1 i, f2), Mul (f1, diff_ei f2 i)), Mul (f2, f2))
-  | _ -> failwith "Not supported"
+  | _ -> failwith "Differentiation not supported"
 
 let rec sum_of_ei_diffs (tf : expr) (k : int) : expr =
   if k = 0 then Const 0.
@@ -211,7 +211,7 @@ let power_of_expanded_expr_aux (f : expanded_expr) (n : int) : expanded_expr =
   let f' = List.fold_left (fun acc _ -> Mul (acc, f)) f (List.init (n - 1) (fun _ -> f)) in
   expand_and_simplify f'
 
-let rec  power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
+let rec power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
   if n = 1 then f 
   else if n mod 2 = 0 then 
     let f' = power_of_expanded_expr_aux f 2 in 
