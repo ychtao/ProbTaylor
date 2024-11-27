@@ -122,8 +122,10 @@ let rec ick_integral (c : float) (k : int) : float =
   else (float_of_int k) *. ick_integral c (k - 1) -. c ** (float_of_int k) *. exp (-. c) 
 
 let laplace_nth_moment (n : int) (low : float) (high : float) : float =
+  (* print_endline ("laplace_nth_moment" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
   let sigma = 0.01 in 
-  let den = standard_laplace_cdf high -. standard_laplace_cdf low in
+  let den_ = standard_laplace_cdf high -. standard_laplace_cdf low in
+  let den = if den_ = 0. then (Float.succ 0.) else den_ in
   if high <= 0. then 
     let i1 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in 
     let i2 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. high /. sigma) n) in
@@ -135,11 +137,10 @@ let laplace_nth_moment (n : int) (low : float) (high : float) : float =
   else 
     let i1 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in
     let i2 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (high /. sigma) n) in
-    (* print_endline (string_of_float i1); *)
-    (* print_endline (string_of_float i2); *)
     (i1 +. i2) /. den
 
 let laplace_nth_moment_pos (n : int) (low : float) (high : float) : float = 
+  (* print_endline ("laplace_nth_moment_pos" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
   let sigma = 0.01 in 
   let den = standard_laplace_cdf high -. standard_laplace_cdf low in
   if low >= 0. then laplace_nth_moment n low high 
@@ -148,12 +149,42 @@ let laplace_nth_moment_pos (n : int) (low : float) (high : float) : float =
     i1 /. den 
 
 let laplace_nth_moment_neg (n : int) (low : float) (high : float) : float = 
+  (* print_endline ("laplace_nth_moment_neg" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
   let sigma = 0.01 in 
   let den = standard_laplace_cdf high -. standard_laplace_cdf low in
   if high <= 0. then (-. 1.) ** (float_of_int n) *. (laplace_nth_moment n low high)
   else if low >= 0. then 0.
   else let i1 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in
     i1 /. den
+
+let laplace_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) : float = 
+  let (rv, n) = rv in 
+  match rv with 
+  | Rv x -> laplace_nth_moment n low high
+  | Prv x -> laplace_nth_moment_pos n low high
+  | Nrv x -> laplace_nth_moment_neg n low high
+
+(* let laplace_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) : float = 
+  let (rv, n) = rv in 
+  let ret = match rv with 
+  | Rv x -> laplace_nth_moment n low high
+  | Prv x -> laplace_nth_moment_pos n low high
+  | Nrv x -> laplace_nth_moment_neg n low high in 
+  print_endline (string_of_float ret); ret *)
+
+let laplace_expectation_of_two_rvs (rv1 : rv * int) (rv2 : rv * int) (low : float) (high : float) =
+  let (rv1, n1) = rv1 in
+  let (rv2, n2) = rv2 in
+  match (rv1, rv2) with
+  | (Rv _, Rv _) -> laplace_nth_moment (n1 + n2) low high
+  | (Rv _, Prv _) -> laplace_nth_moment_pos (n1 + n2) low high
+  | (Rv _, Nrv _) -> (-1. ** (float_of_int n1)) *. (laplace_nth_moment_neg (n1 + n2) low high)
+  | (Prv _, Rv _) -> laplace_nth_moment_pos (n1 + n2) low high
+  | (Prv _, Prv _) -> laplace_nth_moment_pos (n1 + n2) low high
+  | (Prv _, Nrv _) -> 0.
+  | (Nrv _, Rv _) -> (-1. ** (float_of_int n2)) *. (laplace_nth_moment_neg (n1 + n2) low high)
+  | (Nrv _, Prv _) -> 0.
+  | (Nrv _, Nrv _) -> laplace_nth_moment_neg (n1 + n2) low high
 
 let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((rv * int) list)) option =
   match rvs with 
@@ -172,16 +203,21 @@ let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hasht
       (match d with 
       | Uniform (low, high) -> (uniform_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars)
       | Normal (low, high) -> (normal_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars)
-      | _ -> failwith "Not supported")
+      | Exponential (low, high) -> (laplace_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars))
     | Some ((rv', n'), rest') -> let d = Hashtbl.find vars name in 
       (match d with 
       | Uniform (low, high) -> (uniform_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)
       | Normal (low, high) -> (normal_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)
-      | _ -> failwith "Not supported"))
+      | Exponential (low, high) -> (laplace_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)))
 
 let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
   let (c, rvs) = t in 
-  c *. (expectation_of_rvs rvs vars)
+  (* print_endline (string_of_term t); *)
+  let ret = c *. (expectation_of_rvs rvs vars) in
+  (* print_endline (string_of_float ret);
+  print_endline ""; *)
+  ret
+  (* c *. (expectation_of_rvs rvs vars) *)
 
 let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
   List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f

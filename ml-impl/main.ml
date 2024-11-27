@@ -16,7 +16,7 @@ let bound1_poly filename eps c order =
   let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
 
-(* let _ = 
+let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
@@ -25,7 +25,7 @@ let bound1_poly filename eps c order =
   let bound = bound1_poly filename eps c order in 
   print_endline ("First order error bound = " ^ (string_of_float bound));
   let elapsed_time = Unix.gettimeofday () -. start_time in
-  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds") *)
+  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds")
 
 (* let _ = 
   let filename = "Example.txt" in 
@@ -34,10 +34,3 @@ let bound1_poly filename eps c order =
   let r2 = error2 tf k  in 
   print_endline (string_of_expr r2) *)
 
-let _ = 
-  let a = laplace_nth_moment_neg 2 (-0.02) 0.02 in 
-  let b = laplace_nth_moment_neg 2 (-0.02) 0.05 in 
-  let c = laplace_nth_moment_neg 2 (-0.05) 0.02 in 
-  print_endline (string_of_float a);
-  print_endline (string_of_float b);
-  print_endline (string_of_float c)
