@@ -108,6 +108,53 @@ let normal_expectation_of_two_rvs (rv1 : rv * int) (rv2 : rv * int) (low : float
   | (Nrv _, Prv _) -> 0.
   | (Nrv _, Nrv _) -> normal_nth_moment_neg (n1 + n2) low high
 
+let standard_laplace_pdf (x : float) : float = 
+  let sigma = 0.01 in 
+  1. /. (2. *. sigma) *. exp (-. (abs_float x) /. sigma)
+
+let standard_laplace_cdf (x : float) : float = 
+  let sigma = 0.01 in
+  if x < 0. then 0.5 *. exp (x /. sigma)
+  else 1. -. 0.5 *. exp (-. x /. sigma)
+
+let rec ick_integral (c : float) (k : int) : float = 
+  if k = 0 then 1. -. exp (-. c)
+  else (float_of_int k) *. ick_integral c (k - 1) -. c ** (float_of_int k) *. exp (-. c) 
+
+let laplace_nth_moment (n : int) (low : float) (high : float) : float =
+  let sigma = 0.01 in 
+  let den = standard_laplace_cdf high -. standard_laplace_cdf low in
+  if high <= 0. then 
+    let i1 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in 
+    let i2 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. high /. sigma) n) in
+    (i1 -. i2) /. den 
+  else if low >= 0. then 
+    let i1 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (high /. sigma) n) in  
+    let i2 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (low /. sigma) n) in
+    (i1 -. i2) /. den
+  else 
+    let i1 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in
+    let i2 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (high /. sigma) n) in
+    (* print_endline (string_of_float i1); *)
+    (* print_endline (string_of_float i2); *)
+    (i1 +. i2) /. den
+
+let laplace_nth_moment_pos (n : int) (low : float) (high : float) : float = 
+  let sigma = 0.01 in 
+  let den = standard_laplace_cdf high -. standard_laplace_cdf low in
+  if low >= 0. then laplace_nth_moment n low high 
+  else if high <= 0. then 0.
+  else let i1 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (high /. sigma) n) in
+    i1 /. den 
+
+let laplace_nth_moment_neg (n : int) (low : float) (high : float) : float = 
+  let sigma = 0.01 in 
+  let den = standard_laplace_cdf high -. standard_laplace_cdf low in
+  if high <= 0. then (-. 1.) ** (float_of_int n) *. (laplace_nth_moment n low high)
+  else if low >= 0. then 0.
+  else let i1 = 0.5 *. sigma ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in
+    i1 /. den
+
 let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((rv * int) list)) option =
   match rvs with 
   | [] -> None 
