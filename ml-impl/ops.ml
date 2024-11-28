@@ -221,15 +221,50 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
   let f2' = expanded_expr_to_expr f2 in 
   expand_and_simplify (Mul (f1', f2'))
 
+let rec merge_rv_list_aux acc rvs1 rvs2 = 
+  match rvs1, rvs2 with 
+  | [], rvs | rvs, [] -> List.rev_append acc rvs
+  | (rv1, n1) :: rest1, (rv2, n2) :: rest2 -> 
+    let cmp = compare_vars (rv1, n1) (rv2, n2) in 
+    if cmp = 0 then 
+      if n1 + n2 = 0 then merge_rv_list_aux acc rest1 rest2
+      else merge_rv_list_aux ((rv1, n1 + n2) :: acc) rest1 rest2
+    else if cmp < 0 then merge_rv_list_aux ((rv1, n1) :: acc) rest1 rvs2
+    else merge_rv_list_aux ((rv2, n2) :: acc) rvs1 rest2
+
+let merge_rv_list rvs1 rvs2 : (rv * int) list =
+  merge_rv_list_aux [] rvs1 rvs2
+
 let product_of_terms (t1 : term) (t2 : term) : term = 
   let (c1, rvs1) = t1 in 
   let (c2, rvs2) = t2 in 
-  normalize_term (c1 *. c2, rvs1 @ rvs2)
+  normalize_term (c1 *. c2, merge_rv_list rvs1 rvs2)
 
-let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr =
+(* let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr =
   let terms = List.concat (List.map (fun t1 -> 
     List.map (fun t2 -> product_of_terms t1 t2) f2) f1) in
-  simplify_expanded_expr terms
+  simplify_expanded_expr terms *)
+
+let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr = 
+  let rec aux acc f1_terms = 
+    match f1_terms with 
+    | [] -> acc 
+    | t1 :: rest1 -> 
+      let rec aux2 acc2 f2_terms = 
+        match f2_terms with 
+        | [] -> acc2 
+        | t2 :: rest2 -> let new_term = product_of_terms t1 t2 in 
+          aux2 (new_term :: acc2) rest2
+      in let new_acc = aux2 acc f2 in 
+      aux new_acc rest1 in
+    simplify_expanded_expr (aux [] f1)
+
+let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
+  let rec aux f n acc = 
+    if n = 0 then acc 
+    else let new_acc = product_of_expanded_expr acc f in 
+    aux f (n - 1) new_acc in
+  aux f n (expand_and_simplify (Const 1.0))
 
 (* let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
   let rec aux f n acc = 
@@ -238,12 +273,11 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
     else aux (product_of_expanded_expr f f) (n / 2) acc
   in aux f n (expand_and_simplify (Const 1.0)) *)
 
-let power_of_expanded_expr_aux (f : expanded_expr) (n : int) : expanded_expr = 
+(* let power_of_expanded_expr_aux (f : expanded_expr) (n : int) : expanded_expr = 
   if n = 1 then f else 
   let f = expanded_expr_to_expr f in 
   let f' = List.fold_left (fun acc _ -> Mul (acc, f)) f (List.init (n - 1) (fun _ -> f)) in
   expand_and_simplify f'
-(* Use tail recursion to avoid stack overflow *)
 
 let rec power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
   print_endline (string_of_int n);
@@ -264,4 +298,4 @@ let rec power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
     let f2 = power_of_expanded_expr f 4 in
     product_of_expanded_expr f1 f2
   else 
-    power_of_expanded_expr_aux f n
+    power_of_expanded_expr_aux f n *)
