@@ -124,8 +124,9 @@ let rec ick_integral (c : float) (k : int) : float =
 let laplace_nth_moment (n : int) (low : float) (high : float) : float =
   (* print_endline ("laplace_nth_moment" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
   let sigma = 0.01 in 
-  let den_ = standard_laplace_cdf high -. standard_laplace_cdf low in
-  let den = if den_ = 0. then (Float.succ 0.) else den_ in
+  let den = standard_laplace_cdf high -. standard_laplace_cdf low in
+  (* let den_ = standard_laplace_cdf high -. standard_laplace_cdf low in *)
+  (* let den = if den_ = 0. then (Float.succ 0.) else den_ in *)
   if high <= 0. then 
     let i1 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. low /. sigma) n) in 
     let i2 = 0.5 *. (-. sigma) ** (float_of_int n) *. (ick_integral (-. high /. sigma) n) in
@@ -212,12 +213,7 @@ let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hasht
 
 let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
   let (c, rvs) = t in 
-  (* print_endline (string_of_term t); *)
-  let ret = c *. (expectation_of_rvs rvs vars) in
-  (* print_endline (string_of_float ret);
-  print_endline ""; *)
-  ret
-  (* c *. (expectation_of_rvs rvs vars) *)
+  let ret = c *. (expectation_of_rvs rvs vars) in ret
 
 let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
   List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f

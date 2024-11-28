@@ -115,6 +115,17 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
   | _ -> failwith "Not supported"
 
+let compare_vars (v1, _) (v2, _) : int = 
+  let cmp = String.compare (rv_to_name_no_sign v1) (rv_to_name_no_sign v2) in
+  if cmp <> 0 then cmp else match (v1, v2) with
+  | (Rv _, Rv _) -> 0 
+  | (Rv _, _) -> -1
+  | (_, Rv _) -> 1
+  | (Prv _, Prv _) -> 0
+  | (Prv _, _) -> -1
+  | (_, Prv _) -> 1
+  | (Nrv _, Nrv _) -> 0
+
 (* Normalize a term - combine same variables, sort in alphabetical order *)
 let normalize_term (c, vars) =
   let combine_vars vars =
@@ -125,7 +136,7 @@ let normalize_term (c, vars) =
     ) vars;
     Hashtbl.fold (fun v e acc -> (v, e) :: acc) tbl []
   in
-  let compare_vars (v1, _) (v2, _) = 
+  (* let compare_vars (v1, _) (v2, _) = 
     let cmp = String.compare (rv_to_name_no_sign v1) (rv_to_name_no_sign v2) in
     if cmp <> 0 then cmp else match (v1, v2) with
     | (Rv _, Rv _) -> 0
@@ -135,7 +146,7 @@ let normalize_term (c, vars) =
     | (Prv _, _) -> -1
     | (_, Prv _) -> 1
     | (Nrv _, Nrv _) -> 0
-  in
+  in *)
   let combined_vars = combine_vars vars in
   let sorted_vars = List.sort compare_vars combined_vars in
   (c, sorted_vars)
@@ -205,18 +216,52 @@ let separate_expanded_expr (f : expanded_expr) : expanded_expr =
 let invert_negative_term (f : expanded_expr) : expanded_expr = 
   List.map (fun (c, rvs) -> if c >= 0. then (c, rvs) else (-. c, rvs)) f
 
+let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr = 
+  let f1' = expanded_expr_to_expr f1 in 
+  let f2' = expanded_expr_to_expr f2 in 
+  expand_and_simplify (Mul (f1', f2'))
+
+let product_of_terms (t1 : term) (t2 : term) : term = 
+  let (c1, rvs1) = t1 in 
+  let (c2, rvs2) = t2 in 
+  normalize_term (c1 *. c2, rvs1 @ rvs2)
+
+let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr =
+  let terms = List.concat (List.map (fun t1 -> 
+    List.map (fun t2 -> product_of_terms t1 t2) f2) f1) in
+  simplify_expanded_expr terms
+
+(* let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
+  let rec aux f n acc = 
+    if n = 0 then acc 
+    else if n mod 2 = 1 then aux (product_of_expanded_expr f f) (n / 2) (product_of_expanded_expr acc f)
+    else aux (product_of_expanded_expr f f) (n / 2) acc
+  in aux f n (expand_and_simplify (Const 1.0)) *)
+
 let power_of_expanded_expr_aux (f : expanded_expr) (n : int) : expanded_expr = 
   if n = 1 then f else 
   let f = expanded_expr_to_expr f in 
   let f' = List.fold_left (fun acc _ -> Mul (acc, f)) f (List.init (n - 1) (fun _ -> f)) in
   expand_and_simplify f'
+(* Use tail recursion to avoid stack overflow *)
 
 let rec power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
+  print_endline (string_of_int n);
   if n = 1 then f 
   else if n mod 2 = 0 then 
-    let f' = power_of_expanded_expr_aux f 2 in 
-    power_of_expanded_expr f' (n / 2)
+    let f' = power_of_expanded_expr f (n / 2) in
+    product_of_expanded_expr f' f'
   else if n mod 3 = 0 then 
-    let f' = power_of_expanded_expr_aux f 3 in
-    power_of_expanded_expr f' (n / 3)
-  else  power_of_expanded_expr_aux f n
+    let f' = power_of_expanded_expr f (n / 3) in
+    let f'' = product_of_expanded_expr f' f' in
+    product_of_expanded_expr f'' f'
+  else if n = 5 then 
+    let f1 = power_of_expanded_expr_aux f 3 in
+    let f2 = power_of_expanded_expr_aux f 2 in
+    product_of_expanded_expr f1 f2
+  else if n = 7 then 
+    let f1 = power_of_expanded_expr f 3 in
+    let f2 = power_of_expanded_expr f 4 in
+    product_of_expanded_expr f1 f2
+  else 
+    power_of_expanded_expr_aux f n

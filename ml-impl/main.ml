@@ -11,7 +11,9 @@ let bound1_poly filename eps c order =
   let (tf, k) = tilde f in 
   let sod = simplify (sum_of_ei_diffs tf k) in
   let p = invert_negative_term (separate_expanded_expr (expand_and_simplify sod)) in
+  print_endline "p computed";
   let pn = power_of_expanded_expr p order in
+  print_endline "pn computed";
   let esod = expectation_of_expanded_expr pn vars in
   let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
