@@ -31,13 +31,12 @@ let uniform_expectation_of_name (n : int) (pos : int) (neg : int) (low : float) 
 let uniform_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) : float = 
   let (rv, n) = rv in 
   match rv with 
-  | Rv x -> uniform_nth_moment n low high
-  | Prv x -> uniform_nth_moment_pos n low high
-  | Nrv x -> uniform_nth_moment_neg n low high
+  | Rv _ -> uniform_nth_moment n low high
+  | Prv _ -> uniform_nth_moment_pos n low high
+  | Nrv _ -> uniform_nth_moment_neg n low high
 
-let uniform_expectation_of_two_rvs (rv1 : (rv * int)) (rv2 : (rv * int)) (low : float) (high : float) : float = 
-  let (rv1, n1) = rv1 in
-  let (rv2, n2) = rv2 in
+(* rv1 and rv2 should have the same name *)
+let uniform_expectation_of_two_rvs ((rv1, n1) : (rv * int)) ((rv2, n2) : (rv * int)) (low : float) (high : float) : float = 
   match (rv1, rv2) with
   | (Rv _, Rv _) -> uniform_nth_moment (n1 + n2) low high
   | (Rv _, Prv _) -> uniform_nth_moment_pos (n1 + n2) low high 
@@ -49,6 +48,7 @@ let uniform_expectation_of_two_rvs (rv1 : (rv * int)) (rv2 : (rv * int)) (low : 
   | (Nrv _, Prv _) -> 0.
   | (Nrv _, Nrv _) -> uniform_nth_moment_neg (n1 + n2) low high
 
+(* Can do when mean is not zero *)
 let standard_normal_pdf (x : float) : float = 
   1. /. (sqrt (2. *. Float.pi)) *. (exp (-0.5 *. x *. x))
 
@@ -192,7 +192,7 @@ let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((r
   | [] -> None 
   | (rv, n) :: rest -> if (rv_to_name_no_sign rv) = name then Some ((rv, n), rest) else None
 
-(* Assume no three consecutive vars with same name *)
+(* Assume no three consecutive vars with same name i.e., zero term eliminated *)
 let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hashtbl.t) : float = 
   match rvs with 
   | [] -> 1. 

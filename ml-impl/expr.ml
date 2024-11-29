@@ -23,8 +23,10 @@ type rv =
 | Nrv of string
 
 type term = float * (rv * int) list 
+(* A term is a monomial *)
 
 type expanded_expr = term list
+(* Expanded expr is a polynomial, sum of terms *)
 
 let rec string_of_distr (d : distr) : string = 
   match d with 
