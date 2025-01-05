@@ -35,22 +35,26 @@ let _ =
 let print_ed_ranges oc vars k eps dlt = 
   let rec loop_e k i = 
     if i > k then ()
-    else (fprintf oc "e%d:(-%e, %e)\n" i eps eps; loop_e k (i + 1)) in
+    (* else (fprintf oc "e%d:(-%e, %e)\n" i eps eps; loop_e k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] e%d;\n" eps eps i; loop_e k (i + 1)) in
   loop_e k 1;
   let rec loop_d k i = 
     if i > k then ()
-    else (fprintf oc "d%d:(-%e, %e)\n" i dlt dlt; loop_d k (i + 1)) in
+    (* else (fprintf oc "d%d:(-%e, %e)\n" i dlt dlt; loop_d k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] d%d;\n" dlt dlt i; loop_d k (i + 1)) in 
   loop_d k 1;
   let rec loop_p k i = 
     if i > 2 * k then ()
-    else if i <= k then (fprintf oc "p%d:(-%e, %e)\n" i eps eps; loop_p k (i + 1))
-    else (fprintf oc "p%d:(-%e, %e)\n" i dlt dlt; loop_p k (i + 1)) in
+    (* else if i <= k then (fprintf oc "p%d:(-%e, %e)\n" i eps eps; loop_p k (i + 1)) *)
+    else if i <= k then (fprintf oc "[-%e, %e] p%d;\n" eps eps i; loop_p k (i + 1)) 
+    (* else (fprintf oc "p%d:(-%e, %e)\n" i dlt dlt; loop_p k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] p%d;\n" dlt dlt i; loop_p k (i + 1)) in 
   loop_p k 1;
   Hashtbl.iter (fun var distr -> 
     match distr with 
-    | Uniform (low, hi) -> fprintf oc "%s:(%e, %e)\n" var low hi
-    | Normal (low, hi) -> fprintf oc "%s:(%e, %e)\n" var low hi
-    | Exponential (low, hi) -> fprintf oc "%s:(%e, %e)\n" var low hi
+    | Uniform (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | Normal (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | Exponential (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
   ) vars
 
 let _ = 
@@ -62,7 +66,7 @@ let _ =
   let (vars, f) = process_input filename in
   let (tf, k) = tilde f in
   let error2 = error2 tf k in
-  print_endline (string_of_expr tf);
+  (* print_endline (string_of_expr tf); *)
   let oc = open_out "error2.txt" in
   print_ed_ranges oc vars k eps dlt;
   fprintf oc "%s\n" (string_of_expr error2);
