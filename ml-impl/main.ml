@@ -21,7 +21,7 @@ let bound1_poly filename eps c order =
   let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
 
-let _ = 
+(* let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
@@ -29,6 +29,27 @@ let _ =
   let start_time = Unix.gettimeofday () in
   let bound = bound1_poly filename eps c order in 
   print_endline ("First order error bound = " ^ (string_of_float bound));
+  let elapsed_time = Unix.gettimeofday () -. start_time in
+  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds") *)
+
+let _ = 
+  let filename = Sys.argv.(1) in 
+  let eps = 2. ** (-24.) in
+  let c = 0.99 in
+  let start_time = Unix.gettimeofday () in
+  let rec find_best_bound best_bound best_order order = 
+    if order > 30 then (best_bound, best_order)
+    else try  
+      let bound = bound1_poly filename eps c order in 
+      if bound < best_bound then find_best_bound bound order (order + 2)
+      else find_best_bound best_bound best_order (order + 2)
+    with 
+      | Stack_overflow -> (best_bound, best_order)
+  in 
+  let initial_bound = try bound1_poly filename eps c 2 with Stack_overflow -> infinity in 
+  let (best_bound, best_order) = find_best_bound initial_bound 2 4 in
+  print_endline ("First order error bound = " ^ (string_of_float best_bound));
+  print_endline ("Corresponding analysis order = " ^ (string_of_int best_order));
   let elapsed_time = Unix.gettimeofday () -. start_time in
   print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds")
 
