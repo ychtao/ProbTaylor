@@ -110,7 +110,7 @@ let normal_expectation_of_two_rvs (rv1 : rv * int) (rv2 : rv * int) (low : float
 
 let standard_laplace_pdf (x : float) : float = 
   let sigma = 1. in 
-  1. /. (2. *. sigma) *. exp (-. (abs_float x) /. sigma)
+  exp (-. (abs_float x) /. sigma) /. (2. *. sigma)
 
 let standard_laplace_cdf (x : float) : float = 
   let sigma = 1. in
@@ -213,7 +213,9 @@ let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hasht
 
 let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
   let (c, rvs) = t in 
-  let ret = c *. (expectation_of_rvs rvs vars) in ret
+  let ret = c *. (expectation_of_rvs rvs vars) in
+  (* print_endline (string_of_term t ^ " = " ^ string_of_float (ret)); *)
+  ret
 
 let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
   List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f

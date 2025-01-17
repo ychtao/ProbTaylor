@@ -17,6 +17,7 @@ let bound1_poly filename eps c order =
   let pn = power_of_expanded_expr p order in
   (* print_endline ("pn: " ^ (string_of_expanded_expr pn)); *)
   let esod = expectation_of_expanded_expr pn vars in
+  (* print_endline ("esod: " ^ (string_of_float esod)); *)
   let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
 
