@@ -93,6 +93,10 @@ let rec sum_of_ei_diffs (tf : expr) (k : int) : expr =
   if k = 0 then Const 0.
   else Add (simplify (set_err_to_zero (diff_ei tf k)), sum_of_ei_diffs tf (k - 1))
 
+let rec list_of_ei_diffs (tf : expr) (k : int) : expr list = 
+  if k = 0 then []
+  else (simplify (set_err_to_zero (diff_ei tf k))) :: list_of_ei_diffs tf (k - 1)
+
 (* assume no error variables or division *)
 let rec expand_expr (f : expr) : expanded_expr = 
   match f with 
