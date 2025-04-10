@@ -53,7 +53,7 @@ let rec simplify_aux (f : expr) : expr =
   | Add (Const 0., f2) -> simplify_aux f2
   | Add (Const x, Const y) -> Const (x +. y)
   | Min (f1, Const 0.) -> simplify_aux f1
-  | Min (Const 0., f2) -> simplify_aux f2
+  (* | Min (Const 0., f2) -> simplify_aux f2 *)
   | Min (Const x, Const y) -> Const (x -. y)
   | Mul (f1, Const 0.) -> Const 0.
   | Mul (Const 0., f2) -> Const 0.
@@ -99,17 +99,25 @@ let rec list_of_ei_diffs (tf : expr) (k : int) : expr list =
 
 (* assume no error variables or division *)
 let rec expand_expr (f : expr) : expanded_expr = 
+  let tappend l1 l2 = List.rev_append (List.rev l1) l2 in 
   match f with 
+  | Const 0. -> []
   | Const c -> [(c, [])]
   | Var x -> [(1.0, [(Rv x, 1)])]
-  | Add (f1, f2) -> (expand_expr f1) @ (expand_expr f2)
-  | Min (f1, f2) -> (expand_expr f1) @ (List.map (fun (c, vars) -> (-.c, vars)) (expand_expr f2))
+  | Add (f1, f2) -> 
+    let terms1 = expand_expr f1 in
+    let terms2 = expand_expr f2 in 
+    tappend terms1 terms2
+  | Min (f1, f2) -> 
+    let terms1 = expand_expr f1 in
+    let terms2 = (List.map (fun (c, vars) -> (-.c, vars)) (expand_expr f2)) in
+    tappend terms1 terms2
   | Mul (f1, f2) ->
     let terms1 = expand_expr f1 in
     let terms2 = expand_expr f2 in
     List.flatten (List.map (fun (c1, vars1) ->
       List.map (fun (c2, vars2) ->
-        (c1 *. c2, vars1 @ vars2)
+        (c1 *. c2, tappend vars1 vars2)
       ) terms2
     ) terms1)
   | Pvar x -> [(1.0, [(Prv x, 1)])]
@@ -118,6 +126,60 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
   | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
   | _ -> failwith "Not supported"
+
+(* let tappend (l1 : 'a list) (l2 : 'a list) : 'a list = 
+  List.rev_append (List.rev l1) l2
+
+let flatten_add (root : expr) : expr list = 
+  let rec loop (stack : expr list) (acc : expr list) = 
+    match stack with 
+    | [] -> acc 
+    | e :: rest -> match e with 
+      | Add (e1, e2) -> loop (e1 :: e2 :: rest) acc
+      | Min (e1, e2) -> loop (e1 :: (Mul (Const (-1.), e2)) :: rest) acc
+      | _ -> loop rest (e :: acc) in 
+  List.rev (loop [root] []) 
+
+let multiply_terms (l1 : expanded_expr) (l2 : expanded_expr) : expanded_expr = 
+  List.fold_left 
+    (fun acc (c1, vars1) -> 
+      List.fold_left 
+        (fun acc (c2, vars2) -> 
+          (c1 *. c2, tappend vars1 vars2) :: acc) 
+        acc l2) 
+    [] l1
+
+let rec expand_summand (f : expr) : expanded_expr = 
+  match f with 
+  | Const 0. -> []
+  | Const c -> [(c, [])]
+  | Var x -> [(1.0, [(Rv x, 1)])]
+  | Pvar x -> [(1.0, [(Prv x, 1)])]
+  | Nvar x -> [(1.0, [(Nrv x, 1)])]
+  | Exp (Var x, n) -> [(1.0, [(Rv x, n)])]
+  | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
+  | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
+  | Mul (f1, f2) -> 
+      let terms1 = expand_summand f1 in 
+      let terms2 = expand_summand f2 in
+      multiply_terms terms1 terms2
+  | Add (f1, f2) -> 
+      let terms1 = expand_summand f1 in 
+      let terms2 = expand_summand f2 in
+      tappend terms1 terms2
+  | Min (f1, f2) -> 
+      let terms1 = expand_summand f1 in 
+      let terms2 = (List.map (fun (c, vars) -> (-.c, vars)) (expand_summand f2)) in
+      tappend terms1 terms2
+  | _ -> failwith "Not supported"
+
+let expand_expr (f : expr) : expanded_expr = 
+  let summands = flatten_add f in
+  print_endline (string_of_int (List.length summands));
+  print_endline (string_of_expr (List.hd summands));
+  List.fold_left (fun acc summand -> let expanded = expand_summand summand in 
+    print_endline (string_of_int (List.length expanded));
+    tappend acc expanded) [] summands *)
 
 let compare_vars (v1, _) (v2, _) : int = 
   let cmp = String.compare (rv_to_name_no_sign v1) (rv_to_name_no_sign v2) in
@@ -188,6 +250,7 @@ let eliminate_zero_terms (f : expanded_expr) : expanded_expr =
 let simplify_expanded_expr (f : expanded_expr) : expanded_expr = 
   f |> normalize_expanded_expr |> merge_terms |> eliminate_zero_terms
 
+(* Useful definition *)
 let expand_and_simplify (f : expr) : expanded_expr = 
   simplify_expanded_expr (expand_expr f)
 
