@@ -333,6 +333,22 @@ let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
     aux f (n - 1) new_acc in
   aux f n (expand_and_simplify (Const 1.0))
 
+let sum_of_expanded_exprs (ees : expanded_expr list) : expanded_expr = 
+  simplify_expanded_expr (List.flatten ees)
+
+let add_expanded_exprs (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr = 
+  simplify_expanded_expr (List.rev_append f1 f2)
+
+let const_expanded_expr (c : float) : expanded_expr = 
+  [(c, [])]
+
+let const_times_term (c : float) (t : term) : term = 
+  let (c', rvs) = t in 
+  (c *. c', rvs)
+
+let const_times_expanded_expr (c : float) (f : expanded_expr) : expanded_expr = 
+  List.map (fun t -> const_times_term c t) f
+
 (* let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
   let rec aux f n acc = 
     if n = 0 then acc 
