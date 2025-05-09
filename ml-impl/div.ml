@@ -6,6 +6,12 @@ open Expectation
 open Error2
 open Unix
 
+(* let _  = 
+  let (vars, f) = process_input "./benchmarks/Example.txt" in
+  let f = expand_and_simplify f in 
+  let x = expectation_of_expanded_expr f vars in
+  print_endline ("x: " ^ (string_of_float x)) *)
+
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
   Hashtbl.iter (fun key _ -> fprintf oc "%s\n" key) vars;
@@ -44,16 +50,20 @@ let get_hiqs vars lod f_denom =
 let bin_search_u_flag vars eps p q2 u c order thres : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
+  (* print_endline ("k_u: " ^ (string_of_expanded_expr k_u)); *)
   let mu =  expectation_of_expanded_expr k_u vars in
-  print_endline ("mu: " ^ (string_of_float mu));
+  (* print_endline ("mu: " ^ (string_of_float mu)); *)
   (* flag_float_num = (Ku - mu)^order *)
-  let temp = simplify_expanded_expr (add_expanded_exprs k_u (const_expanded_expr (-. mu))) in
-  (* print_endline ("temp: " ^ (string_of_expanded_expr temp)); *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
-    (add_expanded_exprs k_u (const_expanded_expr (-. mu))) 2) in
+    (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
+
+  (* debug *)
+
+  (* end of debug *)
+    
   (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num)); *)
   (* flag_float = E[flag_float_num] / mu^order *)
-  let flag_float = expectation_of_expanded_expr flag_float_num vars /. (mu ** order) in 
+  let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
   flag_float
 
 (* order must be even *)
@@ -84,19 +94,19 @@ let _ =
   (* List.iter (fun d -> print_endline (string_of_expr d)) lod; *)
   let (f_num, f_denom) = get_num_denom_single vars f in
   let hiqs = get_hiqs vars lod f_denom in 
-  List.iter (fun hi -> print_endline (string_of_expanded_expr hi)) hiqs;
+  (* List.iter (fun hi -> print_endline (string_of_expanded_expr hi)) hiqs; *)
   let sod = sum_of_expanded_exprs hiqs in
-  print_endline ("sod: " ^ (string_of_expanded_expr sod));
+  (* print_endline ("sod: " ^ (string_of_expanded_expr sod)); *)
   let p = invert_negative_term (separate_expanded_expr sod) in 
-  print_endline ("p: " ^ (string_of_expanded_expr p));
+  (* print_endline ("p: " ^ (string_of_expanded_expr p)); *)
   let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
-  print_endline ("q2: " ^ (string_of_expanded_expr q2));
-  let u = u_init vars 1. eps p q2 in
-  print_endline ("u: " ^ (string_of_float u));
+  (* print_endline ("q2: " ^ (string_of_expanded_expr q2)); *)
+  (* let u = u_init vars 2. eps p q2 in
+  print_endline ("u: " ^ (string_of_float u)); *)
   (* let q2_var = q2_var vars q2 4 in 
   print_endline ("q2_var: " ^ (string_of_float q2_var)); *)
-  let flag_float = bin_search_u_flag vars eps p q2 (1.25 *. u) c 4. 1e-6 in 
-  print_endline (string_of_float flag_float);
+  let flag_float = bin_search_u_flag vars eps p q2 2e-3 c order 1e-6 in 
+  print_endline (filename ^ " " ^ (string_of_float flag_float));
 
 
 (* let _ = 

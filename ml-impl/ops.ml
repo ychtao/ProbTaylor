@@ -98,6 +98,7 @@ let rec list_of_ei_diffs (tf : expr) (k : int) : expr list =
   else (simplify (set_err_to_zero (diff_ei tf k))) :: list_of_ei_diffs tf (k - 1)
 
 (* assume no error variables or division *)
+(* must be normalized after expanding *)
 let rec expand_expr (f : expr) : expanded_expr = 
   let tappend l1 l2 = List.rev_append (List.rev l1) l2 in 
   match f with 
@@ -223,7 +224,7 @@ let normalize_expanded_expr (f : expanded_expr) : expanded_expr =
 
 (* Merge similar terms*)
 let merge_terms (f : expanded_expr) : expanded_expr = 
-  let tbl = Hashtbl.create 20 in
+  let tbl = Hashtbl.create 200 in
   List.iter (fun (c, vars) ->
     let current_c = try Hashtbl.find tbl vars with Not_found -> 0.0 in
     let new_c = current_c +. c in

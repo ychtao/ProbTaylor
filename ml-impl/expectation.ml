@@ -15,7 +15,7 @@ let uniform_nth_moment_pos (n : int) (low : float) (high : float) : float =
        num /. den
 
 let uniform_nth_moment_neg (n : int) (low : float) (high : float) : float = 
-  if high <= 0. then -. (uniform_nth_moment n low high)
+  if high <= 0. then (uniform_nth_moment n (-. high) (-. low))
   else if low >= 0. then 0.
   else let num = ((-. low) ** (float_of_int (n + 1))) in
        let den = (float_of_int (n + 1)) *. (high -. low) in
@@ -212,6 +212,7 @@ let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hasht
       | Exponential (low, high) -> (laplace_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)))
 
 let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
+  (* print_endline ("expectation_of_term: " ^ (string_of_term t)); *)
   let (c, rvs) = t in 
   let ret = c *. (expectation_of_rvs rvs vars) in
   (* print_endline (string_of_term t ^ " = " ^ string_of_float (ret)); *)
