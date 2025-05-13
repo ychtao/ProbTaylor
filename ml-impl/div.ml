@@ -56,10 +56,6 @@ let bin_search_u_flag vars eps p q2 u c order thres : float =
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
-
-  (* debug *)
-
-  (* end of debug *)
     
   (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num)); *)
   (* flag_float = E[flag_float_num] / mu^order *)
@@ -70,11 +66,13 @@ let bin_search_u_flag vars eps p q2 u c order thres : float =
 let rec bin_search_u vars eps p q2 c thres left right : float =
   1.
 
+(* For testing *)
 let u_init vars k eps p q2 = 
   let ep = expectation_of_expanded_expr p vars in 
   let eq2 = expectation_of_expanded_expr q2 vars in
   k *. eps *. (ep /. eq2)
 
+(* For testing *)
 let q2_var vars q2 n= 
   let eq2 = expectation_of_expanded_expr q2 vars in
   let a = add_expanded_exprs q2 (const_expanded_expr (-. eq2)) in 
@@ -82,6 +80,50 @@ let q2_var vars q2 n=
   let c = power_of_expanded_expr b (2 * n) in 
   expectation_of_expanded_expr c vars
 
+let rec cartesian_product = function
+  | [] -> [[]]
+  | xs :: xss ->
+      let rest = cartesian_product xss in
+      List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs)
+
+let split_var (distribution : Expr.distr) num_interval = 
+  match distribution with 
+  | Uniform (low, hi) ->
+    let step = (hi -. low) /. float_of_int num_interval in 
+    let rec aux i acc = 
+      if i >= num_interval then acc
+      else 
+        let new_low = low +. (step *. float_of_int i) in 
+        let new_hi = low +. (step *. float_of_int (i + 1)) in 
+        aux (i + 1) ((Uniform (new_low, new_hi)) :: acc)
+      in aux 0 []
+  | _ -> failwith "split_var: Unsupported distribution type"
+
+let split_var_key_val (name, distribution) num_interval = 
+  let split_distribution = split_var distribution num_interval in
+  List.map (fun d -> (name, d)) split_distribution
+
+let split_vars vars num_interval =
+  let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
+  let split_var_list = List.map (fun (name, distribution) -> split_var_key_val (name, distribution) num_interval) vars_list in
+  let combinations = cartesian_product split_var_list in
+  combinations
+
+(* Test split_vars *)
+let _ = 
+  let filename = Sys.argv.(1) in
+  let (vars, f) = process_input filename in
+  let num_interval = 2 in
+  let split_vars_result = split_vars vars num_interval in
+  List.iter (fun combination ->
+    List.iter (fun (key, distribution) ->
+      match distribution with
+      | Uniform (low, hi) -> Printf.printf "%s: U(%f, %f)\n" key low hi
+      | Normal (low, hi) -> Printf.printf "%s: N(%f, %f)\n" key low hi
+      | Exponential (low, hi) -> Printf.printf "%s: E(%f, %f)\n" key low hi
+    ) combination;
+    print_newline ()
+  ) split_vars_result
 
 let _ = 
   let filename = Sys.argv.(1) in 
