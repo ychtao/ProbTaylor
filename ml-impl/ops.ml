@@ -1,6 +1,11 @@
 open Expr
 open Printf
 
+let hashtbl_of_list l =
+  let tbl = Hashtbl.create (List.length l) in 
+  List.iter (fun (k, v) -> Hashtbl.add tbl k v) l;
+  tbl
+
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)

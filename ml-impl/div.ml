@@ -47,6 +47,8 @@ let get_hiqs vars lod f_denom =
 (* -1: search for the left half in the next iteration *)  
 (* 0: the answer is found *)
 (* 1: search for hte right half in the next iteration *)
+(* Currently not used in the above way, instead only output *)
+(* the computed upper bound for violation probability *)
 let bin_search_u_flag vars eps p q2 u c order thres : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
@@ -86,7 +88,7 @@ let rec cartesian_product = function
       let rest = cartesian_product xss in
       List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs)
 
-let split_var (distribution : Expr.distr) num_interval = 
+let split_var_aux (distribution : Expr.distr) num_interval = 
   match distribution with 
   | Uniform (low, hi) ->
     let step = (hi -. low) /. float_of_int num_interval in 
@@ -99,18 +101,18 @@ let split_var (distribution : Expr.distr) num_interval =
       in aux 0 []
   | _ -> failwith "split_var: Unsupported distribution type"
 
-let split_var_key_val (name, distribution) num_interval = 
-  let split_distribution = split_var distribution num_interval in
+let split_var (name, distribution) num_interval = 
+  let split_distribution = split_var_aux distribution num_interval in
   List.map (fun d -> (name, d)) split_distribution
 
 let split_vars vars num_interval =
   let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
-  let split_var_list = List.map (fun (name, distribution) -> split_var_key_val (name, distribution) num_interval) vars_list in
+  let split_var_list = List.map (fun (name, distribution) -> split_var (name, distribution) num_interval) vars_list in
   let combinations = cartesian_product split_var_list in
-  combinations
+  List.map hashtbl_of_list combinations
 
 (* Test split_vars *)
-let _ = 
+(* let _ = 
   let filename = Sys.argv.(1) in
   let (vars, f) = process_input filename in
   let num_interval = 2 in
@@ -123,12 +125,13 @@ let _ =
       | Exponential (low, hi) -> Printf.printf "%s: E(%f, %f)\n" key low hi
     ) combination;
     print_newline ()
-  ) split_vars_result
+  ) split_vars_result *)
 
 let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
+  let num_intervals = 8 in 
   let order = 2. in 
   let (vars, f) = process_input filename in
   let (tf, k) = tilde f in
@@ -147,8 +150,17 @@ let _ =
   print_endline ("u: " ^ (string_of_float u)); *)
   (* let q2_var = q2_var vars q2 4 in 
   print_endline ("q2_var: " ^ (string_of_float q2_var)); *)
-  let flag_float = bin_search_u_flag vars eps p q2 2e-3 c order 1e-6 in 
-  print_endline (filename ^ " " ^ (string_of_float flag_float));
+  let sep_vars = split_vars vars num_intervals in 
+  let counter = ref 0 in 
+  let sum = ref 0. in 
+  List.iter (fun subvars ->
+    incr counter;
+    let flag_float = bin_search_u_flag subvars eps p q2 3.75e-6 c order 1e-6 in
+    sum := !sum +. flag_float;
+    Printf.printf "Combination %d: %f \n" !counter flag_float) sep_vars ;
+  Printf.printf "Average: %f \n" (!sum /. float_of_int !counter);
+  (* let flag_float = bin_search_u_flag vars eps p q2 2e-3 c order 1e-6 in 
+  print_endline (filename ^ " " ^ (string_of_float flag_float)); *)
 
 
 (* let _ = 
