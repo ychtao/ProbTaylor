@@ -131,7 +131,7 @@ let _ =
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
-  let num_intervals = 8 in 
+  let num_intervals = 16 in 
   let order = 2. in 
   let (vars, f) = process_input filename in
   let (tf, k) = tilde f in
@@ -150,15 +150,19 @@ let _ =
   print_endline ("u: " ^ (string_of_float u)); *)
   (* let q2_var = q2_var vars q2 4 in 
   print_endline ("q2_var: " ^ (string_of_float q2_var)); *)
+  let u = float_of_string Sys.argv.(2) in 
   let sep_vars = split_vars vars num_intervals in 
   let counter = ref 0 in 
   let sum = ref 0. in 
   List.iter (fun subvars ->
     incr counter;
-    let flag_float = bin_search_u_flag subvars eps p q2 3.75e-6 c order 1e-6 in
-    sum := !sum +. flag_float;
-    Printf.printf "Combination %d: %f \n" !counter flag_float) sep_vars ;
-  Printf.printf "Average: %f \n" (!sum /. float_of_int !counter);
+    let flag_float = bin_search_u_flag subvars eps p q2 u c order 1e-6 in
+    sum := !sum +. (if flag_float > 1. then 1. else flag_float);
+    (* Printf.printf "Combination %d: %f \n" !counter flag_float *)
+    ) sep_vars ;
+  Printf.printf "Number of intervals: %d \n" num_intervals;
+  print_endline ("Threshold u: " ^ (string_of_float u));
+  Printf.printf "Violation probability upper bound: %f \n" (!sum /. float_of_int !counter);
   (* let flag_float = bin_search_u_flag vars eps p q2 2e-3 c order 1e-6 in 
   print_endline (filename ^ " " ^ (string_of_float flag_float)); *)
 
