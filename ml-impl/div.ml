@@ -45,11 +45,10 @@ let get_hiqs vars lod f_denom =
 
 
 (* -1: search for the left half in the next iteration *)  
-(* 0: the answer is found *)
-(* 1: search for hte right half in the next iteration *)
+(* 1: search for the right half in the next iteration *)
 (* Currently not used in the above way, instead only output *)
 (* the computed upper bound for violation probability *)
-let bin_search_u_flag vars eps p q2 u c order thres : float = 
+let u_flag_float_sub vars eps p q2 u c order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
   (* print_endline ("k_u: " ^ (string_of_expanded_expr k_u)); *)
@@ -58,21 +57,36 @@ let bin_search_u_flag vars eps p q2 u c order thres : float =
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
-    
   (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num)); *)
   (* flag_float = E[flag_float_num] / mu^order *)
   let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
-  flag_float
+  if flag_float > 1. then 1. else flag_float
+
+let u_flag_float vars_list eps p q2 u c order : float = 
+  let sum = List.fold_left (fun acc vars ->
+    let cur = u_flag_float_sub vars eps p q2 u c order in 
+    (* print_endline ("cur: " ^ (string_of_float cur)); *)
+    acc +. cur
+  ) 0. vars_list in 
+  sum /. float_of_int (List.length vars_list)
 
 (* order must be even *)
-let rec bin_search_u vars eps p q2 c thres left right : float =
-  1.
+let rec bin_search_u vars_list eps p q2 c order left right : float =
+  Printf.printf "Left: %e, Right: %e\n" left right;
+  let mid = (left *. right) ** 0.5 in 
+  let flag_float = u_flag_float vars_list eps p q2 mid c order in
+  Printf.printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  print_endline "";
+  if flag_float > 1. -. c then bin_search_u vars_list eps p q2 c order mid right 
+  else if (right /. left) < 2. then mid 
+  else bin_search_u vars_list eps p q2 c order left mid
+  (* print_endline ("flag_float: " ^ (string_of_float flag_float)); *)
 
 (* For testing *)
-let u_init vars k eps p q2 = 
+let u_init vars eps p q2 = 
   let ep = expectation_of_expanded_expr p vars in 
   let eq2 = expectation_of_expanded_expr q2 vars in
-  k *. eps *. (ep /. eq2)
+  eps *. (ep /. eq2)
 
 (* For testing *)
 let q2_var vars q2 n= 
@@ -146,25 +160,21 @@ let _ =
   (* print_endline ("p: " ^ (string_of_expanded_expr p)); *)
   let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
   (* print_endline ("q2: " ^ (string_of_expanded_expr q2)); *)
-  (* let u = u_init vars 2. eps p q2 in
-  print_endline ("u: " ^ (string_of_float u)); *)
+  let u_init = u_init vars eps p q2 in
+  (* print_endline ("u: " ^ (string_of_float u)); *)
   (* let q2_var = q2_var vars q2 4 in 
   print_endline ("q2_var: " ^ (string_of_float q2_var)); *)
-  let u = float_of_string Sys.argv.(2) in 
-  let sep_vars = split_vars vars num_intervals in 
-  let counter = ref 0 in 
-  let sum = ref 0. in 
-  List.iter (fun subvars ->
-    incr counter;
-    let flag_float = bin_search_u_flag subvars eps p q2 u c order 1e-6 in
-    sum := !sum +. (if flag_float > 1. then 1. else flag_float);
-    (* Printf.printf "Combination %d: %f \n" !counter flag_float *)
-    ) sep_vars ;
-  Printf.printf "Number of intervals: %d \n" num_intervals;
+  let vars_list = split_vars vars num_intervals in 
+  let u = bin_search_u vars_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
+  print_endline ("u: " ^ (string_of_float u))   
+
+  (* let u = float_of_string Sys.argv.(2) in 
+  let vars_list = split_vars vars num_intervals in 
+  print_endline ("Number of intervals: " ^ (string_of_int num_intervals));
+  let flag_float = u_flag_float vars_list eps p q2 u c order in 
   print_endline ("Threshold u: " ^ (string_of_float u));
-  Printf.printf "Violation probability upper bound: %f \n" (!sum /. float_of_int !counter);
-  (* let flag_float = bin_search_u_flag vars eps p q2 2e-3 c order 1e-6 in 
-  print_endline (filename ^ " " ^ (string_of_float flag_float)); *)
+  print_endline ("flag_float: " ^ (string_of_float flag_float)) *)
+
 
 
 (* let _ = 
