@@ -3,6 +3,18 @@ type distr =
 | Normal of float * float
 | Exponential of float * float
 
+let low_of_distr (d : distr) : float = 
+  match d with 
+  | Uniform (low, _) -> low
+  | Normal (low, _) -> low
+  | Exponential (low, _) -> low
+
+let hign_of_distr (d : distr) : float =
+  match d with 
+  | Uniform (_, hi) -> hi
+  | Normal (_, hi) -> hi
+  | Exponential (_, hi) -> hi
+
 type expr = 
 | Const of float 
 | Var of string

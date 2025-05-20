@@ -6,11 +6,8 @@ open Expectation
 open Error2
 open Unix
 
-(* let _  = 
-  let (vars, f) = process_input "./benchmarks/Example.txt" in
-  let f = expand_and_simplify f in 
-  let x = expectation_of_expanded_expr f vars in
-  print_endline ("x: " ^ (string_of_float x)) *)
+let _ = 
+  Printf.printf "%f\n" (wide_normal_nth_moment 4 (-15.) (20.))
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
@@ -62,6 +59,7 @@ let u_flag_float_sub vars eps p q2 u c order : float =
   let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
   if flag_float > 1. then 1. else flag_float
 
+(* Unweighted, only for uniform distribution *)
 let u_flag_float vars_list eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc vars ->
     let cur = u_flag_float_sub vars eps p q2 u c order in 
@@ -70,7 +68,18 @@ let u_flag_float vars_list eps p q2 u c order : float =
   ) 0. vars_list in 
   sum /. float_of_int (List.length vars_list)
 
-(* order must be even *)
+let u_flag_float_weighted vars_weight_list eps p q2 u c order : float = 
+  let sum = List.fold_left (fun acc (vars, weight) ->
+    (* let distribution = Hashtbl.find vars "v" in 
+    Printf.printf "v: %f, %f\n" (low_of_distr distribution) (high_of_distr distribution); *)
+    let cur = u_flag_float_sub vars eps p q2 u c order in 
+    (* print_endline ("cur: " ^ (string_of_float cur)); *)
+    acc +. (cur *. weight)
+  ) 0. vars_weight_list in 
+  sum 
+
+(* Order must be even *)
+(* Unweighted, only for uniform distribution *)
 let rec bin_search_u vars_list eps p q2 c order left right : float =
   Printf.printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
@@ -80,11 +89,22 @@ let rec bin_search_u vars_list eps p q2 c order left right : float =
   if flag_float > 1. -. c then bin_search_u vars_list eps p q2 c order mid right 
   else if (right /. left) < 2. then mid 
   else bin_search_u vars_list eps p q2 c order left mid
-  (* print_endline ("flag_float: " ^ (string_of_float flag_float)); *)
 
-(* For testing *)
+let rec bin_search_u_weighted vars_weight_list eps p q2 c order left right : float =
+  Printf.printf "Left: %e, Right: %e\n" left right;
+  let mid = (left *. right) ** 0.5 in 
+  let flag_float = u_flag_float_weighted vars_weight_list eps p q2 mid c order in
+  Printf.printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  print_endline "";
+  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list eps p q2 c order mid right 
+  else if (right /. left) < 2. then mid 
+  else bin_search_u_weighted vars_weight_list eps p q2 c order left mid
+
 let u_init vars eps p q2 = 
+  (* print_endline ("p : " ^ (string_of_expanded_expr p)); *)
   let ep = expectation_of_expanded_expr p vars in 
+  (* print_endline ("ep: " ^ (string_of_float ep)); *)
+  if Float.is_infinite ep then failwith "ep is infinite";
   let eq2 = expectation_of_expanded_expr q2 vars in
   eps *. (ep /. eq2)
 
@@ -101,6 +121,12 @@ let rec cartesian_product = function
   | xs :: xss ->
       let rest = cartesian_product xss in
       List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs)
+
+let rec cartesian_product_float = function 
+  | [] -> [1. ]
+  | xs :: xss ->
+      let rest = cartesian_product_float xss in 
+      List.flatten (List.map (fun x -> List.map (fun r -> x *. r) rest) xs)
 
 let split_var_aux (distribution : Expr.distr) num_interval = 
   match distribution with 
@@ -125,6 +151,67 @@ let split_vars vars num_interval =
   let combinations = cartesian_product split_var_list in
   List.map hashtbl_of_list combinations
 
+let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.distr list * float list) = 
+  match distribution with 
+  | Uniform (low, hi) ->
+    let step = (hi -. low) /. float_of_int num_interval in 
+    let rec aux i acc_d acc_w = 
+      if i >= num_interval then (acc_d, acc_w)
+      else 
+        let new_low = low +. (step *. float_of_int i) in 
+        let new_hi = low +. (step *. float_of_int (i + 1)) in 
+        aux (i + 1) ((Uniform (new_low, new_hi)) :: acc_d) ((1. /. (float_of_int num_interval)) :: acc_w)
+      in aux 0 [] []
+  | Normal (low, hi) ->
+    let step = (hi -. low) /. float_of_int num_interval in
+    let total_weight = standard_normal_cdf hi -. standard_normal_cdf low in
+    let rec aux i acc_d acc_w = 
+      if i >= num_interval then (acc_d, acc_w)
+      else 
+        let new_low = low +. (step *. float_of_int i) in 
+        let new_hi = low +. (step *. float_of_int (i + 1)) in 
+        let weight = standard_normal_cdf new_hi -. standard_normal_cdf new_low in
+        aux (i + 1) ((Normal (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
+      in aux 0 [] []
+  | Exponential (low, hi) ->
+    let step = (hi -. low) /. float_of_int num_interval in
+    let total_weight = standard_laplace_cdf hi -. standard_laplace_cdf low in
+    let rec aux i acc_d acc_w = 
+      if i >= num_interval then (acc_d, acc_w)
+      else 
+        let new_low = low +. (step *. float_of_int i) in 
+        let new_hi = low +. (step *. float_of_int (i + 1)) in 
+        let weight = standard_laplace_cdf new_hi -. standard_laplace_cdf new_low in
+        aux (i + 1) ((Exponential (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
+      in aux 0 [] []
+
+let split_var_with_weight (name, distribution) num_interval : (string * Expr.distr) list * float list = 
+  let (split_distribution, weights) = split_var_aux_with_weight distribution num_interval in
+  let split_vars = List.map (fun d -> (name, d)) split_distribution in
+  (split_vars, weights)
+
+let split_vars_with_weight vars num_interval = 
+  let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
+  let split_vars_list = List.map (fun (name, distribution) -> split_var_with_weight (name, distribution) num_interval) vars_list in
+  let combinations = List.map hashtbl_of_list (cartesian_product (List.map fst split_vars_list)) in
+  let weights = cartesian_product_float (List.map snd split_vars_list) in
+  List.combine combinations weights
+
+(* Test split_vars_with_weight *)
+(* let _ = 
+  let filename = Sys.argv.(1) in
+  let (vars, f) = process_input filename in
+  let num_interval = 4 in
+  let vars_weight_list = split_vars_with_weight vars num_interval in
+  List.iter (fun (vars, weight) ->
+    List.iter (fun (key, distribution) ->
+      match distribution with
+      | Uniform (low, hi) -> Printf.printf "%s: U(%f, %f)\n" key low hi
+      | Normal (low, hi) -> Printf.printf "%s: N(%f, %f)\n" key low hi
+      | Exponential (low, hi) -> Printf.printf "%s: E(%f, %f)\n" key low hi
+    ) vars;
+    Printf.printf "Weight: %f\n" weight) vars_weight_list *)
+
 (* Test split_vars *)
 (* let _ = 
   let filename = Sys.argv.(1) in
@@ -141,7 +228,8 @@ let split_vars vars num_interval =
     print_newline ()
   ) split_vars_result *)
 
-let _ = 
+(* Unweighted only *)
+(* let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
@@ -162,37 +250,27 @@ let _ =
   (* print_endline ("q2: " ^ (string_of_expanded_expr q2)); *)
   let u_init = u_init vars eps p q2 in
   (* print_endline ("u: " ^ (string_of_float u)); *)
-  (* let q2_var = q2_var vars q2 4 in 
-  print_endline ("q2_var: " ^ (string_of_float q2_var)); *)
   let vars_list = split_vars vars num_intervals in 
   let u = bin_search_u vars_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
-  print_endline ("u: " ^ (string_of_float u))   
+  print_endline ("u: " ^ (string_of_float u))    *)
 
-  (* let u = float_of_string Sys.argv.(2) in 
-  let vars_list = split_vars vars num_intervals in 
-  print_endline ("Number of intervals: " ^ (string_of_int num_intervals));
-  let flag_float = u_flag_float vars_list eps p q2 u c order in 
-  print_endline ("Threshold u: " ^ (string_of_float u));
-  print_endline ("flag_float: " ^ (string_of_float flag_float)) *)
-
-
-
-(* let _ = 
+let _ = 
   let filename = Sys.argv.(1) in 
-  let eps = 2. ** (-24.) in
-  let c = 0.99 in 
-  let (vars, f) = process_input filename in 
+  let eps = 2. ** (-24.) in 
+  let c = 0.99 in
+  let num_intervals = 16 in 
+  let order = 2. in
+  let (vars, f) = process_input filename in
   let (tf, k) = tilde f in
-  let lod = list_of_ei_diffs tf k in 
-  List.iter (fun d -> print_endline (string_of_expr d)) lod;
-  let (nums, denoms) = List.split (List.map (get_num_denom vars) lod) in
-  (* denoms_product is D in the manuscript *)
-  let denoms_product = List.fold_left (fun acc denom -> simplify (Mul (acc, denom))) (List.hd denoms) (List.tl denoms) in
-  let nums_prime = List.map (fun num -> simplify (Mul (num, denoms_product))) nums in
-  (* nums_prime_sum is the N in the manuscript *)
-  let nums_prime_sum = List.fold_left (fun acc num -> simplify (Add (acc, num))) (List.hd nums_prime) (List.tl nums_prime) in
-  (* print_endline ("nums_prime_sum: " ^ (string_of_expr nums_prime_sum)); *)
-  let pp = expand_expr nums_prime_sum in
-  print_endline ("pp: " ^ (string_of_expanded_expr pp));
-  let p = invert_negative_term (separate_expanded_expr (expand_and_simplify nums_prime_sum)) in
-  print_endline ("p: " ^ (string_of_expanded_expr p)); *)
+  let lod = list_of_ei_diffs tf k in
+  let (f_num, f_denom) = get_num_denom_single vars f in
+  let hiqs = get_hiqs vars lod f_denom in
+  let sod = sum_of_expanded_exprs hiqs in
+  let p = invert_negative_term (separate_expanded_expr sod) in
+  let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
+  let u_init = u_init vars eps p q2 in
+  print_endline ("u_init: " ^ (string_of_float u_init));
+  let vars_weight_list = split_vars_with_weight vars num_intervals in
+  let u = bin_search_u_weighted vars_weight_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
+  print_endline ("u: " ^ (string_of_float u));
+

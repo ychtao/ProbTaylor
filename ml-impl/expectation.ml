@@ -108,6 +108,27 @@ let normal_expectation_of_two_rvs (rv1 : rv * int) (rv2 : rv * int) (low : float
   | (Nrv _, Prv _) -> 0.
   | (Nrv _, Nrv _) -> normal_nth_moment_neg (n1 + n2) low high
 
+(* Begins wide normal distribution *)
+
+let wide_normal_pdf (x : float) : float = 
+  let sigma = 10. in 
+  1. /. (sqrt (2. *. Float.pi *. sigma *. sigma)) *. (exp (-. x *. x /. (2. *. sigma *. sigma)))
+
+let wide_normal_cdf (x : float) : float = 
+  let sigma = 10. in 
+  standard_normal_cdf (x /. sigma)
+
+let rec wide_normal_nth_moment (n : int) (low : float) (high : float) : float = 
+  let sigma = 10. in 
+  if n = 0 then 1.
+  else if n = 1 then sigma *. sigma *. (wide_normal_pdf low -. wide_normal_pdf high) /. (wide_normal_cdf high -. wide_normal_cdf low)
+  else let num = sigma *. sigma *. (low ** (float_of_int (n - 1)) *. wide_normal_pdf low -. high ** (float_of_int (n - 1)) *. wide_normal_pdf high) in
+       let den = wide_normal_cdf high -. wide_normal_cdf low in
+       num /. den +. sigma *. sigma *. (float_of_int n -. 1.) *. wide_normal_nth_moment (n - 2) low high
+
+(* Ends wide normal distribution *)
+
+
 let standard_laplace_pdf (x : float) : float = 
   let sigma = 1. in 
   exp (-. (abs_float x) /. sigma) /. (2. *. sigma)
@@ -212,10 +233,9 @@ let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hasht
       | Exponential (low, high) -> (laplace_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)))
 
 let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
-  (* print_endline ("expectation_of_term: " ^ (string_of_term t)); *)
   let (c, rvs) = t in 
   let ret = c *. (expectation_of_rvs rvs vars) in
-  (* print_endline (string_of_term t ^ " = " ^ string_of_float (ret)); *)
+  (* Printf.printf "expectation of term %s = %f\n" (string_of_term t) ret; *)
   ret
 
 let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
