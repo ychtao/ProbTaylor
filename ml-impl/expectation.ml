@@ -126,6 +126,26 @@ let rec wide_normal_nth_moment (n : int) (low : float) (high : float) : float =
        let den = wide_normal_cdf high -. wide_normal_cdf low in
        num /. den +. sigma *. sigma *. (float_of_int n -. 1.) *. wide_normal_nth_moment (n - 2) low high
 
+let rec wide_normal_nth_moment_pos (n : int) (low : float) (high : float) : float = 
+  let sigma = 10. in 
+  if low >= 0. then wide_normal_nth_moment n low high 
+  else if high <= 0. then 0. 
+  else if n = 0 then (wide_normal_cdf high -. wide_normal_cdf 0.) /. (wide_normal_cdf high -. wide_normal_cdf low)
+  else if n = 1 then sigma *. sigma *. (wide_normal_pdf 0. -. wide_normal_pdf high) /. (wide_normal_cdf high -. wide_normal_cdf low)
+  else let num = -. sigma *. sigma *. (high ** (float_of_int (n - 1))) *. wide_normal_pdf high in 
+       let den = wide_normal_cdf high -. wide_normal_cdf low in
+       num /. den +. (float_of_int (n - 1)) *. sigma *. sigma *. wide_normal_nth_moment_pos (n - 2) low high 
+
+let rec wide_normal_nth_moment_neg (n : int) (low : float) (high : float) : float = 
+  let sigma = 10. in 
+  if high <= 0. then -. (wide_normal_nth_moment n low high)
+  else if low >= 0. then 0. 
+  else if n = 0 then (wide_normal_cdf 0. -. wide_normal_cdf low) /. (wide_normal_cdf high -. wide_normal_cdf low)
+  else if n = 1 then sigma *. sigma *. (wide_normal_pdf 0. -. wide_normal_pdf low) /. (wide_normal_cdf high -. wide_normal_cdf low)
+  else let num = ((-1.) ** (float_of_int n)) *. sigma *. sigma *. (low ** (float_of_int (n - 1))) *. wide_normal_pdf low in 
+       let den = wide_normal_cdf high -. wide_normal_cdf low in 
+       num /. den +. sigma *. sigma *. (float_of_int (n - 1)) *. wide_normal_nth_moment_neg (n - 2) low high
+
 (* Ends wide normal distribution *)
 
 

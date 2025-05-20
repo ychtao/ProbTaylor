@@ -7,7 +7,15 @@ open Error2
 open Unix
 
 let _ = 
-  Printf.printf "%f\n" (wide_normal_nth_moment 4 (-15.) (20.))
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 0 (-5.) (5.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 1 (-5.) (5.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 2 (-5.) (5.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 3 (-5.) (5.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 0 (-3.) (15.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 1 (-3.) (15.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 2 (-3.) (15.));
+  Printf.printf "%f\n" (wide_normal_nth_moment_neg 3 (-3.) (15.))
+
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
