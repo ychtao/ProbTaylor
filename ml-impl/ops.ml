@@ -131,6 +131,7 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Exp (Var x, n) -> [(1.0, [(Rv x, n)])]
   | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
   | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
+  | Div (f1, Const n2) -> expand_expr (Mul ((Const (1. /. n2)), f1))
   | _ -> failwith "Not supported"
 
 (* let tappend (l1 : 'a list) (l2 : 'a list) : 'a list = 
@@ -237,6 +238,9 @@ let merge_terms (f : expanded_expr) : expanded_expr =
   ) f;
   Hashtbl.fold (fun vars c acc -> (c, vars) :: acc) tbl []
 
+let coef_of_term (t : term) : float = 
+  let (c, _) = t in c
+
 let rec is_zero_rvs (rvs : (rv * int) list) : bool =
   match rvs with 
   | (rv1, n1) :: (rv2, n2) :: rest -> (match rv1, rv2 with 
@@ -272,7 +276,8 @@ let separate_term (t : term) : expanded_expr =
   in expand_and_simplify (List.fold_left (fun acc rv -> Mul (acc, sep_pn_rv rv)) (Const c) rvs)
 
 let separate_expanded_expr (f : expanded_expr) : expanded_expr = 
-  simplify_expanded_expr (List.flatten (List.map separate_term f))
+  (* simplify_expanded_expr (List.flatten (List.map separate_term f)) *)
+  (List.flatten (List.map separate_term f))
 
 (* assume that rv (not prv or nrv) are all even power *)
 (* let is_positive_term (t : term) : bool = 
@@ -327,6 +332,12 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
         match f2_terms with 
         | [] -> acc2 
         | t2 :: rest2 -> let new_term = product_of_terms t1 t2 in 
+          (* for debugging *)
+          (* (if Float.is_nan (coef_of_term new_term) then 
+            (printf "t1: %s\n" (string_of_term t1);
+            printf "t2: %s\n" (string_of_term t2);
+            printf "new_term: %s\n\n" (string_of_term new_term))); *)
+          (* end debugging *)
           aux2 (new_term :: acc2) rest2
       in let new_acc = aux2 acc f2 in 
       aux new_acc rest1 in
@@ -339,8 +350,11 @@ let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr =
     aux f (n - 1) new_acc in
   aux f n (expand_and_simplify (Const 1.0))
 
+(* let sum_of_expanded_exprs (ees : expanded_expr list) : expanded_expr = 
+  simplify_expanded_expr (List.flatten ees) *)
+
 let sum_of_expanded_exprs (ees : expanded_expr list) : expanded_expr = 
-  simplify_expanded_expr (List.flatten ees)
+  (List.flatten ees)
 
 let add_expanded_exprs (f1 : expanded_expr) (f2 : expanded_expr) : expanded_expr = 
   simplify_expanded_expr (List.rev_append f1 f2)

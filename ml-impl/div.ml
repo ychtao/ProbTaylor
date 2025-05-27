@@ -7,15 +7,10 @@ open Error2
 open Unix
 
 let _ = 
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 0 (-5.) (5.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 1 (-5.) (5.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 2 (-5.) (5.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 3 (-5.) (5.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 0 (-3.) (15.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 1 (-3.) (15.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 2 (-3.) (15.));
-  Printf.printf "%f\n" (wide_normal_nth_moment_neg 3 (-3.) (15.))
-
+  printf "n=2: %e\n" (normal_nth_moment 2 0.225 0.2375);
+  printf "n=4: %e\n" (normal_nth_moment 4 0.225 0.2375);
+  printf "n=6: %e\n" (normal_nth_moment 6 0.225 0.2375);
+  printf "n=8: %e\n" (normal_nth_moment 8 0.225 0.2375)
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
@@ -62,10 +57,12 @@ let u_flag_float_sub vars eps p q2 u c order : float =
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
-  (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num)); *)
+  (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num));
+  print_endline ("E[flag_float_num]: " ^ (string_of_float (expectation_of_expanded_expr_verbose flag_float_num vars))); *)
   (* flag_float = E[flag_float_num] / mu^order *)
   let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
-  if flag_float > 1. then 1. else flag_float
+  if Float.is_nan flag_float then failwith "flag_float is NaN"
+  else if flag_float > 1. then 1. else flag_float
 
 (* Unweighted, only for uniform distribution *)
 let u_flag_float vars_list eps p q2 u c order : float = 
@@ -78,10 +75,11 @@ let u_flag_float vars_list eps p q2 u c order : float =
 
 let u_flag_float_weighted vars_weight_list eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
-    (* let distribution = Hashtbl.find vars "v" in 
-    Printf.printf "v: %f, %f\n" (low_of_distr distribution) (high_of_distr distribution); *)
     let cur = u_flag_float_sub vars eps p q2 u c order in 
-    (* print_endline ("cur: " ^ (string_of_float cur)); *)
+    (* print_vars vars;
+    print_endline ("cur: " ^ (string_of_float cur));
+    print_endline ""; *)
+    (* (if cur <= 0. then failwith "negative upper bound"); *)
     acc +. (cur *. weight)
   ) 0. vars_weight_list in 
   sum 
@@ -98,6 +96,7 @@ let rec bin_search_u vars_list eps p q2 c order left right : float =
   else if (right /. left) < 2. then mid 
   else bin_search_u vars_list eps p q2 c order left mid
 
+(* Order must be even *)
 let rec bin_search_u_weighted vars_weight_list eps p q2 c order left right : float =
   Printf.printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
@@ -114,6 +113,7 @@ let u_init vars eps p q2 =
   (* print_endline ("ep: " ^ (string_of_float ep)); *)
   if Float.is_infinite ep then failwith "ep is infinite";
   let eq2 = expectation_of_expanded_expr q2 vars in
+  (* print_endline ("eq2: " ^ (string_of_float eq2)); *)
   eps *. (ep /. eq2)
 
 (* For testing *)
@@ -192,6 +192,17 @@ let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.d
         let weight = standard_laplace_cdf new_hi -. standard_laplace_cdf new_low in
         aux (i + 1) ((Exponential (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
       in aux 0 [] []
+  | Wide (low, hi) -> 
+    let step = (hi -. low) /. float_of_int num_interval in
+    let total_weight = wide_normal_cdf hi -. wide_normal_cdf low in
+    let rec aux i acc_d acc_w = 
+      if i >= num_interval then (acc_d, acc_w)
+      else 
+        let new_low = low +. (step *. float_of_int i) in 
+        let new_hi = low +. (step *. float_of_int (i + 1)) in 
+        let weight = wide_normal_cdf new_hi -. wide_normal_cdf new_low in
+        aux (i + 1) ((Wide (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
+      in aux 0 [] []
 
 let split_var_with_weight (name, distribution) num_interval : (string * Expr.distr) list * float list = 
   let (split_distribution, weights) = split_var_aux_with_weight distribution num_interval in
@@ -204,6 +215,26 @@ let split_vars_with_weight vars num_interval =
   let combinations = List.map hashtbl_of_list (cartesian_product (List.map fst split_vars_list)) in
   let weights = cartesian_product_float (List.map snd split_vars_list) in
   List.combine combinations weights
+
+let _ = 
+  let filename = Sys.argv.(1) in 
+  let eps = 2. ** (-24.) in 
+  let c = 0.99 in
+  let num_intervals = 16 in 
+  let order = 2. in
+  let (vars, f) = process_input filename in
+  let (tf, k) = tilde f in
+  let lod = list_of_ei_diffs tf k in
+  let (f_num, f_denom) = get_num_denom_single vars f in
+  let hiqs = get_hiqs vars lod f_denom in
+  let sod = sum_of_expanded_exprs hiqs in
+  let p = invert_negative_term (separate_expanded_expr sod) in
+  let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
+  let u_init = u_init vars eps p q2 in
+  print_endline ("u_init: " ^ (string_of_float u_init));
+  let vars_weight_list = split_vars_with_weight vars num_intervals in
+  let u = bin_search_u_weighted vars_weight_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
+  print_endline ("u: " ^ (string_of_float u));
 
 (* Test split_vars_with_weight *)
 (* let _ = 
@@ -261,24 +292,3 @@ let split_vars_with_weight vars num_interval =
   let vars_list = split_vars vars num_intervals in 
   let u = bin_search_u vars_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
   print_endline ("u: " ^ (string_of_float u))    *)
-
-let _ = 
-  let filename = Sys.argv.(1) in 
-  let eps = 2. ** (-24.) in 
-  let c = 0.99 in
-  let num_intervals = 16 in 
-  let order = 2. in
-  let (vars, f) = process_input filename in
-  let (tf, k) = tilde f in
-  let lod = list_of_ei_diffs tf k in
-  let (f_num, f_denom) = get_num_denom_single vars f in
-  let hiqs = get_hiqs vars lod f_denom in
-  let sod = sum_of_expanded_exprs hiqs in
-  let p = invert_negative_term (separate_expanded_expr sod) in
-  let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
-  let u_init = u_init vars eps p q2 in
-  print_endline ("u_init: " ^ (string_of_float u_init));
-  let vars_weight_list = split_vars_with_weight vars num_intervals in
-  let u = bin_search_u_weighted vars_weight_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
-  print_endline ("u: " ^ (string_of_float u));
-

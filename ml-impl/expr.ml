@@ -2,18 +2,21 @@ type distr =
 | Uniform of float * float
 | Normal of float * float
 | Exponential of float * float
+| Wide of float * float
 
 let low_of_distr (d : distr) : float = 
   match d with 
   | Uniform (low, _) -> low
   | Normal (low, _) -> low
   | Exponential (low, _) -> low
+  | Wide (low, _) -> low 
 
-let hign_of_distr (d : distr) : float =
+let high_of_distr (d : distr) : float =
   match d with 
   | Uniform (_, hi) -> hi
   | Normal (_, hi) -> hi
   | Exponential (_, hi) -> hi
+  | Wide (_, hi) -> hi
 
 type expr = 
 | Const of float 
@@ -45,6 +48,13 @@ let rec string_of_distr (d : distr) : string =
   | Uniform (low, hi) -> "U(" ^ string_of_float low ^ ", " ^ string_of_float hi ^ ")"
   | Normal (low, hi) -> "N(" ^ string_of_float low ^ ", " ^ string_of_float hi ^ ")"
   | Exponential (low, hi) -> "E(" ^ string_of_float low ^ ", " ^ string_of_float hi ^ ")"
+  | Wide (low, hi) -> "W(" ^ string_of_float low ^ ", " ^ string_of_float hi ^ ")"
+
+let print_vars (vars : (string, distr) Hashtbl.t) : unit = 
+  Hashtbl.iter (fun name d -> 
+    Printf.printf "%s: %s\n" name (string_of_distr d)
+  ) vars
+
 
 let rec string_of_expr (f : expr) : string = 
   match f with 

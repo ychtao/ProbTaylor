@@ -45,6 +45,7 @@ let vardec_tuple_to_distr (name, distribution, low, hi) =
   | "U" -> Uniform (low, hi)
   | "N" -> Normal (low, hi)
   | "E" -> Exponential (low, hi)
+  | "W" -> Wide (low, hi)
   | _ -> failwith "Invalid variable declaration"  
 
 let vardecs_parser vardecs =
