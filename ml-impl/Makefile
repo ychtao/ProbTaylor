@@ -9,9 +9,10 @@ all:
 	ocamlc -c ops.ml
 	ocamlc -c expectation.ml
 	ocamlc -c error2.ml
-	ocamlc -c main.ml
+	ocamlfind ocamlc -package owl -c expectation_num.ml
+	# ocamlc -c main.ml
 	ocamlc -c div.ml
-	ocamlc -o a.out -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo error2.cmo main.cmo 
+	# ocamlc -o a.out -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo error2.cmo main.cmo 
 	ocamlc -o b.out -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo error2.cmo div.cmo
 
 clean:

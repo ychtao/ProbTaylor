@@ -7,10 +7,9 @@ open Error2
 open Unix
 
 let _ = 
-  printf "n=2: %e\n" (normal_nth_moment 2 0.225 0.2375);
-  printf "n=4: %e\n" (normal_nth_moment 4 0.225 0.2375);
-  printf "n=6: %e\n" (normal_nth_moment 6 0.225 0.2375);
-  printf "n=8: %e\n" (normal_nth_moment 8 0.225 0.2375)
+  printf "%f\n" (laplace_nth_moment_neg 3 (-3.) (5.));
+  printf "%f\n" (laplace_nth_moment_neg 3 2. 5.);
+  printf "%f\n" (laplace_nth_moment_neg 3 (-5.) (-2.))
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
