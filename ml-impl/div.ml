@@ -2,14 +2,10 @@ open Expr
 open Input_parser
 open Printf
 open Ops
-open Expectation
+open Expectation_num
 open Error2
 open Unix
 
-let _ = 
-  printf "%f\n" (laplace_nth_moment_neg 3 (-3.) (5.));
-  printf "%f\n" (laplace_nth_moment_neg 3 2. 5.);
-  printf "%f\n" (laplace_nth_moment_neg 3 (-5.) (-2.))
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
@@ -191,7 +187,8 @@ let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.d
         let weight = standard_laplace_cdf new_hi -. standard_laplace_cdf new_low in
         aux (i + 1) ((Exponential (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
       in aux 0 [] []
-  | Wide (low, hi) -> 
+  | _ -> failwith "split_var_aux_with_weight: Unsupported distribution type"
+  (* | Wide (low, hi) -> 
     let step = (hi -. low) /. float_of_int num_interval in
     let total_weight = wide_normal_cdf hi -. wide_normal_cdf low in
     let rec aux i acc_d acc_w = 
@@ -201,7 +198,7 @@ let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.d
         let new_hi = low +. (step *. float_of_int (i + 1)) in 
         let weight = wide_normal_cdf new_hi -. wide_normal_cdf new_low in
         aux (i + 1) ((Wide (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
-      in aux 0 [] []
+      in aux 0 [] [] *)
 
 let split_var_with_weight (name, distribution) num_interval : (string * Expr.distr) list * float list = 
   let (split_distribution, weights) = split_var_aux_with_weight distribution num_interval in
