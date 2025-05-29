@@ -279,6 +279,28 @@ let separate_expanded_expr (f : expanded_expr) : expanded_expr =
   (* simplify_expanded_expr (List.flatten (List.map separate_term f)) *)
   (List.flatten (List.map separate_term f))
 
+let separate_term_opt (t : term) (vars : (string, distr) Hashtbl.t) : expanded_expr = 
+  let (c, rvs) = t in 
+  let sep_pn_rv (v, n) vars = 
+    let name = rv_to_name_no_sign v in
+    let (low, high) = get_low_high name vars in
+    if low >= 0. then (Exp (Var name, n))
+    else if high <= 0. then (
+      if n = 0 then Const 1.
+      else if n = 1 then Min (Const 0., Nvar name)
+      else if n mod 2 = 0 then Exp (Var name, n)
+      else Mul (Exp (Var name, n - 1), Min (Const 0., Nvar name)))
+    else (
+      if n = 0 then Const 1.
+      else if n = 1 then Min (Pvar name, Nvar name)
+      else if n mod 2 = 0 then Exp (Var name, n)
+      else Mul (Exp (Var name, n - 1), Min (Pvar name, Nvar name)))
+    in expand_and_simplify (List.fold_left (fun acc rv -> Mul (acc, sep_pn_rv rv vars)) (Const c) rvs)
+
+let separate_expanded_expr_opt (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : expanded_expr = 
+  (* simplify_expanded_expr (List.flatten (List.map (fun t -> separate_term_opt t vars) f)) *)
+  (List.flatten (List.map (fun t -> separate_term_opt t vars) f))
+
 (* assume that rv (not prv or nrv) are all even power *)
 (* let is_positive_term (t : term) : bool = 
   let (c, rvs) = t in 

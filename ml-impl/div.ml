@@ -2,10 +2,10 @@ open Expr
 open Input_parser
 open Printf
 open Ops
-open Expectation_num
+open Expectation_num 
+(* open Expectation *)
 open Error2
 open Unix
-
 
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
@@ -56,6 +56,8 @@ let u_flag_float_sub vars eps p q2 u c order : float =
   print_endline ("E[flag_float_num]: " ^ (string_of_float (expectation_of_expanded_expr_verbose flag_float_num vars))); *)
   (* flag_float = E[flag_float_num] / mu^order *)
   let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
+  (* print_vars vars;
+  print_endline ("flag_float: " ^ (string_of_float flag_float)); *)
   if Float.is_nan flag_float then failwith "flag_float is NaN"
   else if flag_float > 1. then 1. else flag_float
 
@@ -212,6 +214,25 @@ let split_vars_with_weight vars num_interval =
   let weights = cartesian_product_float (List.map snd split_vars_list) in
   List.combine combinations weights
 
+(* TODO: do testing here *)
+(* let _ = 
+  let filename = Sys.argv.(1) in 
+  (* let eps = 2. ** (-24.) in 
+  let c = 0.99 in
+  let num_intervals = 16 in 
+  let order = 2. in *)
+  let (vars, f) = process_input filename in
+  let (tf, k) = tilde f in
+  let lod = list_of_ei_diffs tf k in
+  let (f_num, f_denom) = get_num_denom_single vars f in
+  let hiqs = get_hiqs vars lod f_denom in
+  let sod = sum_of_expanded_exprs hiqs in
+  let p = invert_negative_term (separate_expanded_expr sod) in
+  let p_opt = invert_negative_term (separate_expanded_expr_opt sod vars) in 
+  printf "sod: %s\n" (string_of_expanded_expr sod);
+  printf "p: %s\n" (string_of_expanded_expr p);
+  printf "p_opt: %s\n" (string_of_expanded_expr p_opt) *)
+
 let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
@@ -224,8 +245,10 @@ let _ =
   let (f_num, f_denom) = get_num_denom_single vars f in
   let hiqs = get_hiqs vars lod f_denom in
   let sod = sum_of_expanded_exprs hiqs in
-  let p = invert_negative_term (separate_expanded_expr sod) in
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in
   let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
+  printf "p: %s\n" (string_of_expanded_expr p);
+  printf "q2: %s\n" (string_of_expanded_expr q2);
   let u_init = u_init vars eps p q2 in
   print_endline ("u_init: " ^ (string_of_float u_init));
   let vars_weight_list = split_vars_with_weight vars num_intervals in

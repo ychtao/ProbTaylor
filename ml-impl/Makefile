@@ -17,7 +17,7 @@ all:
 	# ocamlc -c main.ml
 	ocamlc -c div.ml
 	# ocamlc -o a.out -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo error2.cmo main.cmo 
-	ocamlfind ocamlc -package owl -linkpkg  -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation_num.cmo error2.cmo div.cmo
+	ocamlfind ocamlc -package owl -linkpkg  -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo div.cmo
 
 clean:
 	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt

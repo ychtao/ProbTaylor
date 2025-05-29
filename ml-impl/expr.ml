@@ -112,3 +112,10 @@ let term_to_expr (t : term) : expr =
   
 let expanded_expr_to_expr (f : expanded_expr) : expr = 
   List.fold_left (fun acc t -> Add (acc, term_to_expr t)) (Const 0.) f
+
+let get_low_high (name : string) (vars : (string, distr) Hashtbl.t) : float * float =
+  match Hashtbl.find_opt vars name with
+  | Some (Uniform (low, high)) -> (low, high)
+  | Some (Normal (low, high)) -> (low, high)
+  | Some (Exponential (low, high)) -> (low, high)
+  | _ -> failwith ("get_low_high: Unsupported distribution type for " ^ name)
