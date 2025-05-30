@@ -77,6 +77,7 @@ let print_ed_ranges oc vars k eps dlt =
     | Uniform (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
     | Normal (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
     | Exponential (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | _ -> failwith ("print_ed_ranges: Unsupported distribution type for variable ")
   ) vars
 
 let _ = 

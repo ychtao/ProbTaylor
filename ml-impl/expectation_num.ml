@@ -122,25 +122,52 @@ let uniform_expectation_of_name (n : int) (pos : int) (neg : int) (low : float) 
   else if (neg = 0) then uniform_nth_moment_pos (n + pos) low high 
   else failwith "Unexpected case"
 
-let uniform_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) : float = 
+(* A record of the already calculated expectations *)
+type rcd = ((rv * int * float * float), float) Hashtbl.t
+
+let print_rcd (rcd : rcd) = 
+  Hashtbl.iter (fun (rv, n, low, high) ret -> 
+    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret) rcd
+
+let uniform_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) (rcd : rcd) : (float * rcd) = 
   let (rv, n) = rv in 
-  match rv with 
-  | Rv _ -> uniform_nth_moment n low high
-  | Prv _ -> uniform_nth_moment_pos n low high
-  | Nrv _ -> uniform_nth_moment_neg n low high
+  if Hashtbl.mem rcd (rv, n, low, high) then 
+    (Hashtbl.find rcd (rv, n, low, high), rcd)
+  else match rv with 
+  | Rv _ -> let ret = uniform_nth_moment n low high in 
+    Hashtbl.add rcd (rv, n, low, high) ret; 
+    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (ret, rcd)
+  | Prv _ -> let ret = uniform_nth_moment_pos n low high in 
+    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
+  | Nrv _ -> let ret = uniform_nth_moment_neg n low high in 
+    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
 
 (* rv1 and rv2 should have the same name *)
-let uniform_expectation_of_two_rvs ((rv1, n1) : (rv * int)) ((rv2, n2) : (rv * int)) (low : float) (high : float) : float = 
+let uniform_expectation_of_two_rvs ((rv1, n1) : (rv * int)) ((rv2, n2) : (rv * int)) (low : float) (high : float) (rcd : rcd) : (float * rcd) = 
   match (rv1, rv2) with
-  | (Rv _, Rv _) -> uniform_nth_moment (n1 + n2) low high
-  | (Rv _, Prv _) -> uniform_nth_moment_pos (n1 + n2) low high 
-  | (Rv _, Nrv _) -> (-1. ** (float_of_int n1)) *. (uniform_nth_moment_neg (n1 + n2) low high)
-  | (Prv _, Rv _) -> uniform_nth_moment_pos (n1 + n2) low high
-  | (Prv _, Prv _) -> uniform_nth_moment_pos (n1 + n2) low high
-  | (Prv _, Nrv _) -> 0.
-  | (Nrv _, Rv _) -> (-1. ** (float_of_int n2)) *. (uniform_nth_moment_neg (n1 + n2) low high)
-  | (Nrv _, Prv _) -> 0.
-  | (Nrv _, Nrv _) -> uniform_nth_moment_neg (n1 + n2) low high
+  | (Rv _, Rv _) -> uniform_expectation_of_one_rv (rv1, n1 + n2) low high rcd
+    (* uniform_nth_moment (n1 + n2) low high *)
+  | (Rv _, Prv _) -> uniform_expectation_of_one_rv (rv2, n1 + n2) low high rcd
+    (* uniform_nth_moment_pos (n1 + n2) low high  *)
+  | (Rv _, Nrv _) -> 
+    let (ret', rcd) = (uniform_expectation_of_one_rv (rv2, n1 + n2) low high rcd) in
+    ((-1. ** (float_of_int n1)) *. ret', rcd)
+    (* (-1. ** (float_of_int n1)) *. (uniform_nth_moment_neg (n1 + n2) low high) *)
+  | (Prv _, Rv _) -> uniform_expectation_of_one_rv (rv1, n1 + n2) low high rcd
+    (* uniform_nth_moment_pos (n1 + n2) low high *)
+  | (Prv _, Prv _) -> uniform_expectation_of_one_rv (rv2, n1 + n2) low high rcd
+    (* uniform_nth_moment_pos (n1 + n2) low high *)
+  | (Prv _, Nrv _) -> (0., rcd)
+  | (Nrv _, Rv _) -> 
+    let (ret', rcd) = (uniform_expectation_of_one_rv (rv1, n1 + n2) low high rcd) in
+    ((-1. ** (float_of_int n2)) *. ret', rcd)
+    (* (-1. ** (float_of_int n2)) *. (uniform_nth_moment_neg (n1 + n2) low high) *)
+  | (Nrv _, Prv _) -> (0., rcd)
+  | (Nrv _, Nrv _) -> uniform_expectation_of_one_rv (rv1, n1 + n2) low high rcd
+    (* uniform_nth_moment_neg (n1 + n2) low high *)
 
 let normal_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) : float = 
   let (rv, n) = rv in 
@@ -190,41 +217,67 @@ let match_first_name (name : string) (rvs : (rv * int) list) : ((rv * int) * ((r
   | (rv, n) :: rest -> if (rv_to_name_no_sign rv) = name then Some ((rv, n), rest) else None
 
 (* Assume no three consecutive vars with same name i.e., zero term eliminated *)
-let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hashtbl.t) : float = 
+let rec expectation_of_rvs (rvs : (rv * int) list) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
   match rvs with 
-  | [] -> 1. 
+  | [] -> (1., rcd) 
   | (rv, n) :: rest -> 
     let name = rv_to_name_no_sign rv in 
     let match_result = match_first_name name rest in
     (match match_result with
     | None -> let d = Hashtbl.find vars name in
       (match d with 
-      | Uniform (low, high) -> (uniform_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars)
-      | Normal (low, high) -> (normal_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars)
-      | Exponential (low, high) -> (laplace_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars)
+      | Uniform (low, high) -> 
+        let (reth, rcd') = uniform_expectation_of_one_rv (rv, n) low high rcd in 
+        let (rett, rcd'') = expectation_of_rvs rest vars rcd' in 
+        (reth *. rett, rcd'')
+        (* (uniform_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars) *)
+      | Normal (low, high) -> failwith "expectation_of_rvs: unsupported distribution type"
+        (* (normal_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars) *)
+      | Exponential (low, high) -> failwith "expectation_of_rvs: unsupported distribution type"
+        (* (laplace_expectation_of_one_rv (rv, n) low high) *. (expectation_of_rvs rest vars) *)
       | _ -> failwith "expectation_of_rvs: Unsupported distribution type")
     | Some ((rv', n'), rest') -> let d = Hashtbl.find vars name in 
       (match d with 
-      | Uniform (low, high) -> (uniform_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)
-      | Normal (low, high) -> (normal_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)
-      | Exponential (low, high) -> (laplace_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars)
+      | Uniform (low, high) -> 
+        let (reth, rcd') = uniform_expectation_of_two_rvs (rv, n) (rv', n') low high rcd in 
+        let (rett, rcd'') = expectation_of_rvs rest' vars rcd' in 
+        (reth *. rett, rcd'')
+        (* (uniform_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars) *)
+      | Normal (low, high) -> failwith "expectation_of_rvs: unsupported distribution type"
+      (* (normal_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars) *)
+      | Exponential (low, high) -> failwith "expectation_of_rvs: unsupported distribution type"
+      (* (laplace_expectation_of_two_rvs (rv, n) (rv', n') low high) *. (expectation_of_rvs rest' vars) *)
       | _ -> failwith "expectation_of_rvs: Unsupported distribution type"))
 
-let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float = 
+let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
   let (c, rvs) = t in 
-  let ret = c *. (expectation_of_rvs rvs vars) in
-  (* Printf.printf "expectation of term %s = %f\n" (string_of_term t) ret; *)
-  ret
+  let (ret, rcd') = expectation_of_rvs rvs vars rcd in 
+  (c *. ret, rcd')
 
-let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
-  List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f
+let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
+  List.fold_left 
+    (fun (acc_ret, acc_rcd) t -> let (ret, rcd') = expectation_of_term t vars acc_rcd in (acc_ret +. ret, rcd'))
+    (0., rcd) f
 
-let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) : float = 
+let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
+  let (c, rvs) = t in 
+  printf "Computing expectation of term: %s\n" (string_of_term t);
+  let (ret, rcd') = expectation_of_rvs rvs vars rcd in 
+  printf "%s : %f\n\n" (string_of_term t) (c *. ret);
+  (* print_rcd rcd'; *)
+  (c *. ret, rcd')
+
+let expectation_of_expanded_expr_verbose (f : expanded_expr) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
+  List.fold_left 
+    (fun (acc_ret, acc_rcd) t -> let (ret, rcd') = expectation_of_term_verbose t vars acc_rcd in (acc_ret +. ret, rcd'))
+    (0., rcd) f
+
+(* let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) : float = 
   let (c, rvs) = t in 
   let ret = c *. (expectation_of_rvs rvs vars) in
   Printf.printf "%s : %e\n" (string_of_term t) ret;
   ret
 
 let expectation_of_expanded_expr_verbose (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float =
-  List.fold_left (fun acc t -> acc +. (expectation_of_term_verbose t vars)) 0. f
+  List.fold_left (fun acc t -> acc +. (expectation_of_term_verbose t vars)) 0. f *)
 
