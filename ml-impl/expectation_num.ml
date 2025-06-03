@@ -135,13 +135,13 @@ let uniform_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) (
     (Hashtbl.find rcd (rv, n, low, high), rcd)
   else match rv with 
   | Rv _ -> let ret = uniform_nth_moment n low high in 
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Prv _ -> let ret = uniform_nth_moment_pos n low high in 
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Nrv _ -> let ret = uniform_nth_moment_neg n low high in 
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
 
 (* rv1 and rv2 should have the same name *)
@@ -167,13 +167,13 @@ let normal_expectation_of_one_rv (rv : rv * int) (low : float) (high : float)  (
     (Hashtbl.find rcd (rv, n, low, high), rcd)
   else match rv with 
   | Rv _ -> let ret = normal_nth_moment n low high in 
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Prv _ -> let ret = normal_nth_moment_pos n low high in
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Nrv _ -> let ret = normal_nth_moment_neg n low high in
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
 
 let normal_expectation_of_two_rvs ((rv1, n1) : rv * int) ((rv2, n2) : rv * int) (low : float) (high : float) (rcd : rcd) : (float * rcd) =
@@ -198,13 +198,13 @@ let laplace_expectation_of_one_rv (rv : rv * int) (low : float) (high : float) (
     (Hashtbl.find rcd (rv, n, low, high), rcd)
   else match rv with 
   | Rv _ -> let ret = laplace_nth_moment n low high in 
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Prv _ -> let ret = laplace_nth_moment_pos n low high in
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
   | Nrv _ -> let ret = laplace_nth_moment_neg n low high in
-    printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret;
+    (* printf "%s, n=%d, low=%f, high=%f => %f\n" (string_of_rv rv) n low high ret; *)
     Hashtbl.add rcd (rv, n, low, high) ret; (ret, rcd)
 
 let laplace_expectation_of_two_rvs ((rv1, n1) : rv * int) ((rv2, n2) : rv * int) (low : float) (high : float) (rcd : rcd) : (float * rcd) =
@@ -279,10 +279,9 @@ let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Has
 
 let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
   let (c, rvs) = t in 
-  printf "Computing expectation of term: %s\n" (string_of_term t);
+  (* printf "Computing expectation of term: %s\n" (string_of_term t); *)
   let (ret, rcd') = expectation_of_rvs rvs vars rcd in 
-  printf "%s : %f\n\n" (string_of_term t) (c *. ret);
-  (* print_rcd rcd'; *)
+  (* printf "%s : %f\n\n" (string_of_term t) (c *. ret); *)
   (c *. ret, rcd')
 
 let expectation_of_expanded_expr_verbose (f : expanded_expr) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 

@@ -43,11 +43,11 @@ let get_hiqs vars lod f_denom =
 (* 1: search for the right half in the next iteration *)
 (* Currently not used in the above way, instead only output *)
 (* the computed upper bound for violation probability *)
-let u_flag_float_sub vars eps p q2 u c order : float = 
+let u_flag_float_sub vars rcd eps p q2 u c order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
   (* print_endline ("k_u: " ^ (string_of_expanded_expr k_u)); *)
-  let mu =  expectation_of_expanded_expr k_u vars in
+  let mu =  fst (expectation_of_expanded_expr k_u vars rcd) in
   (* print_endline ("mu: " ^ (string_of_float mu)); *)
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
@@ -55,71 +55,39 @@ let u_flag_float_sub vars eps p q2 u c order : float =
   (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num));
   print_endline ("E[flag_float_num]: " ^ (string_of_float (expectation_of_expanded_expr_verbose flag_float_num vars))); *)
   (* flag_float = E[flag_float_num] / mu^order *)
-  let flag_float = (expectation_of_expanded_expr flag_float_num vars) /. (mu ** order) in 
+  let flag_float = fst (expectation_of_expanded_expr flag_float_num vars rcd) /. (mu ** order) in 
   (* print_vars vars;
   print_endline ("flag_float: " ^ (string_of_float flag_float)); *)
   if Float.is_nan flag_float then failwith "flag_float is NaN"
   else if flag_float > 1. then 1. else flag_float
 
-(* Unweighted, only for uniform distribution *)
-let u_flag_float vars_list eps p q2 u c order : float = 
-  let sum = List.fold_left (fun acc vars ->
-    let cur = u_flag_float_sub vars eps p q2 u c order in 
-    (* print_endline ("cur: " ^ (string_of_float cur)); *)
-    acc +. cur
-  ) 0. vars_list in 
-  sum /. float_of_int (List.length vars_list)
-
-let u_flag_float_weighted vars_weight_list eps p q2 u c order : float = 
+let u_flag_float_weighted vars_weight_list rcd eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
-    let cur = u_flag_float_sub vars eps p q2 u c order in 
+    let cur = u_flag_float_sub vars rcd eps p q2 u c order in 
     (* print_vars vars;
     print_endline ("cur: " ^ (string_of_float cur));
-    print_endline ""; *)
+    print_endline "";  *)
     (* (if cur <= 0. then failwith "negative upper bound"); *)
     acc +. (cur *. weight)
   ) 0. vars_weight_list in 
   sum 
 
 (* Order must be even *)
-(* Unweighted, only for uniform distribution *)
-let rec bin_search_u vars_list eps p q2 c order left right : float =
-  Printf.printf "Left: %e, Right: %e\n" left right;
+let rec bin_search_u_weighted vars_weight_list rcd eps p q2 c order left right : float =
+  printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
-  let flag_float = u_flag_float vars_list eps p q2 mid c order in
-  Printf.printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  let flag_float = u_flag_float_weighted vars_weight_list rcd eps p q2 mid c order in
+  printf "Mid: %e, Flag Float: %f\n" mid flag_float;
   print_endline "";
-  if flag_float > 1. -. c then bin_search_u vars_list eps p q2 c order mid right 
-  else if (right /. left) < 2. then mid 
-  else bin_search_u vars_list eps p q2 c order left mid
-
-(* Order must be even *)
-let rec bin_search_u_weighted vars_weight_list eps p q2 c order left right : float =
-  Printf.printf "Left: %e, Right: %e\n" left right;
-  let mid = (left *. right) ** 0.5 in 
-  let flag_float = u_flag_float_weighted vars_weight_list eps p q2 mid c order in
-  Printf.printf "Mid: %e, Flag Float: %f\n" mid flag_float;
-  print_endline "";
-  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list eps p q2 c order mid right 
-  else if (right /. left) < 2. then mid 
-  else bin_search_u_weighted vars_weight_list eps p q2 c order left mid
+  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps p q2 c order mid right 
+  else if (right /. left) < 1.2 then mid 
+  else bin_search_u_weighted vars_weight_list rcd eps p q2 c order left mid
 
 let u_init vars eps p q2 = 
-  (* print_endline ("p : " ^ (string_of_expanded_expr p)); *)
-  let ep = expectation_of_expanded_expr p vars in 
-  (* print_endline ("ep: " ^ (string_of_float ep)); *)
-  if Float.is_infinite ep then failwith "ep is infinite";
-  let eq2 = expectation_of_expanded_expr q2 vars in
-  (* print_endline ("eq2: " ^ (string_of_float eq2)); *)
+  let rcd = Hashtbl.create 20 in
+  let (ep, rcd) = expectation_of_expanded_expr p vars rcd in 
+  let (eq2, rcd) = expectation_of_expanded_expr q2 vars rcd in
   eps *. (ep /. eq2)
-
-(* For testing *)
-let q2_var vars q2 n= 
-  let eq2 = expectation_of_expanded_expr q2 vars in
-  let a = add_expanded_exprs q2 (const_expanded_expr (-. eq2)) in 
-  let b = const_times_expanded_expr (1. /. eq2) a in 
-  let c = power_of_expanded_expr b (2 * n) in 
-  expectation_of_expanded_expr c vars
 
 let rec cartesian_product = function
   | [] -> [[]]
@@ -239,6 +207,7 @@ let _ =
   let c = 0.99 in
   let num_intervals = 16 in 
   let order = 2. in
+  let rcd = Hashtbl.create 20 in 
   let (vars, f) = process_input filename in
   let (tf, k) = tilde f in
   let lod = list_of_ei_diffs tf k in
@@ -252,7 +221,7 @@ let _ =
   let u_init = u_init vars eps p q2 in
   print_endline ("u_init: " ^ (string_of_float u_init));
   let vars_weight_list = split_vars_with_weight vars num_intervals in
-  let u = bin_search_u_weighted vars_weight_list eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
+  let u = bin_search_u_weighted vars_weight_list rcd eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
   print_endline ("u: " ^ (string_of_float u));
 
 (* Test split_vars_with_weight *)
