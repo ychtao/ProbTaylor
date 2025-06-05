@@ -12,7 +12,7 @@ let bound1_poly filename eps c order =
   (* print_endline ("tf: " ^ (string_of_expr tf)); *)
   let sod = simplify (sum_of_ei_diffs tf k) in
   (* print_endline ("sod: " ^ (string_of_expr sod)); *)
-  let p = invert_negative_term (separate_expanded_expr (expand_and_simplify sod)) in
+  let p = invert_negative_term (separate_expanded_expr_opt (expand_and_simplify sod) vars) in
   (* print_endline ("p: " ^ (string_of_expanded_expr p)); *)
   let pn = power_of_expanded_expr p order in
   (* print_endline ("pn: " ^ (string_of_expanded_expr pn)); *)

@@ -80,7 +80,7 @@ let u_init vars eps p q2 =
   let (eq2, rcd) = expectation_of_expanded_expr q2 vars rcd in
   eps *. (ep /. eq2)
 
-let split_var_aux (distribution : Expr.distr) num_interval = 
+(* let split_var_aux (distribution : Expr.distr) num_interval = 
   match distribution with 
   | Uniform (low, hi) ->
     let step = (hi -. low) /. float_of_int num_interval in 
@@ -91,17 +91,17 @@ let split_var_aux (distribution : Expr.distr) num_interval =
         let new_hi = low +. (step *. float_of_int (i + 1)) in 
         aux (i + 1) ((Uniform (new_low, new_hi)) :: acc)
       in aux 0 []
-  | _ -> failwith "split_var: Unsupported distribution type"
+  | _ -> failwith "split_var: Unsupported distribution type" *)
 
-let split_var (name, distribution) num_interval = 
+(* let split_var (name, distribution) num_interval = 
   let split_distribution = split_var_aux distribution num_interval in
-  List.map (fun d -> (name, d)) split_distribution
+  List.map (fun d -> (name, d)) split_distribution *)
 
-let split_vars vars num_interval =
+(* let split_vars vars num_interval =
   let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
   let split_var_list = List.map (fun (name, distribution) -> split_var (name, distribution) num_interval) vars_list in
   let combinations = cartesian_product split_var_list in
-  List.map hashtbl_of_list combinations
+  List.map hashtbl_of_list combinations *)
 
 let _ = 
   let filename = Sys.argv.(1) in 
