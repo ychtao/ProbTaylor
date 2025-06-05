@@ -15,10 +15,11 @@ all:
 	ocamlc -c expectation.ml
 	ocamlc -c error2.ml
 	ocamlfind ocamlc -package owl -linkpkg -c expectation_num.ml
-	ocamlc -c main.ml
+	ocamlc -c partition.ml
+	ocamlc -c poly.ml
 	ocamlc -c div.ml
-	ocamlc -o a.out -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo error2.cmo main.cmo 
-	ocamlfind ocamlc -package owl -linkpkg  -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo div.cmo
+	ocamlfind ocamlc -package owl -linkpkg -o a.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo partition.cmo poly.cmo 
+	ocamlfind ocamlc -package owl -linkpkg -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo partition.cmo error2.cmo div.cmo
 
 # test: 
 # 	ocamlc -c expr.ml

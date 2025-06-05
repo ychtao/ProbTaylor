@@ -4,6 +4,7 @@ open Printf
 open Ops
 open Expectation_num 
 (* open Expectation *)
+open Partition
 open Error2
 open Unix
 
@@ -46,27 +47,17 @@ let get_hiqs vars lod f_denom =
 let u_flag_float_sub vars rcd eps p q2 u c order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
-  (* print_endline ("k_u: " ^ (string_of_expanded_expr k_u)); *)
   let mu =  fst (expectation_of_expanded_expr k_u vars rcd) in
-  (* print_endline ("mu: " ^ (string_of_float mu)); *)
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
-  (* print_endline ("flag_float_num: " ^ (string_of_expanded_expr flag_float_num));
-  print_endline ("E[flag_float_num]: " ^ (string_of_float (expectation_of_expanded_expr_verbose flag_float_num vars))); *)
-  (* flag_float = E[flag_float_num] / mu^order *)
   let flag_float = fst (expectation_of_expanded_expr flag_float_num vars rcd) /. (mu ** order) in 
-  (* print_vars vars;
-  print_endline ("flag_float: " ^ (string_of_float flag_float)); *)
   if Float.is_nan flag_float then failwith "flag_float is NaN"
   else if flag_float > 1. then 1. else flag_float
 
 let u_flag_float_weighted vars_weight_list rcd eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
     let cur = u_flag_float_sub vars rcd eps p q2 u c order in 
-    (* print_vars vars;
-    print_endline ("cur: " ^ (string_of_float cur));
-    print_endline "";  *)
     (* (if cur <= 0. then failwith "negative upper bound"); *)
     acc +. (cur *. weight)
   ) 0. vars_weight_list in 
@@ -88,18 +79,6 @@ let u_init vars eps p q2 =
   let (ep, rcd) = expectation_of_expanded_expr p vars rcd in 
   let (eq2, rcd) = expectation_of_expanded_expr q2 vars rcd in
   eps *. (ep /. eq2)
-
-let rec cartesian_product = function
-  | [] -> [[]]
-  | xs :: xss ->
-      let rest = cartesian_product xss in
-      List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs)
-
-let rec cartesian_product_float = function 
-  | [] -> [1. ]
-  | xs :: xss ->
-      let rest = cartesian_product_float xss in 
-      List.flatten (List.map (fun x -> List.map (fun r -> x *. r) rest) xs)
 
 let split_var_aux (distribution : Expr.distr) num_interval = 
   match distribution with 
@@ -123,83 +102,6 @@ let split_vars vars num_interval =
   let split_var_list = List.map (fun (name, distribution) -> split_var (name, distribution) num_interval) vars_list in
   let combinations = cartesian_product split_var_list in
   List.map hashtbl_of_list combinations
-
-let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.distr list * float list) = 
-  match distribution with 
-  | Uniform (low, hi) ->
-    let step = (hi -. low) /. float_of_int num_interval in 
-    let rec aux i acc_d acc_w = 
-      if i >= num_interval then (acc_d, acc_w)
-      else 
-        let new_low = low +. (step *. float_of_int i) in 
-        let new_hi = low +. (step *. float_of_int (i + 1)) in 
-        aux (i + 1) ((Uniform (new_low, new_hi)) :: acc_d) ((1. /. (float_of_int num_interval)) :: acc_w)
-      in aux 0 [] []
-  | Normal (low, hi) ->
-    let step = (hi -. low) /. float_of_int num_interval in
-    let total_weight = standard_normal_cdf hi -. standard_normal_cdf low in
-    let rec aux i acc_d acc_w = 
-      if i >= num_interval then (acc_d, acc_w)
-      else 
-        let new_low = low +. (step *. float_of_int i) in 
-        let new_hi = low +. (step *. float_of_int (i + 1)) in 
-        let weight = standard_normal_cdf new_hi -. standard_normal_cdf new_low in
-        aux (i + 1) ((Normal (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
-      in aux 0 [] []
-  | Exponential (low, hi) ->
-    let step = (hi -. low) /. float_of_int num_interval in
-    let total_weight = standard_laplace_cdf hi -. standard_laplace_cdf low in
-    let rec aux i acc_d acc_w = 
-      if i >= num_interval then (acc_d, acc_w)
-      else 
-        let new_low = low +. (step *. float_of_int i) in 
-        let new_hi = low +. (step *. float_of_int (i + 1)) in 
-        let weight = standard_laplace_cdf new_hi -. standard_laplace_cdf new_low in
-        aux (i + 1) ((Exponential (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
-      in aux 0 [] []
-  | _ -> failwith "split_var_aux_with_weight: Unsupported distribution type"
-  (* | Wide (low, hi) -> 
-    let step = (hi -. low) /. float_of_int num_interval in
-    let total_weight = wide_normal_cdf hi -. wide_normal_cdf low in
-    let rec aux i acc_d acc_w = 
-      if i >= num_interval then (acc_d, acc_w)
-      else 
-        let new_low = low +. (step *. float_of_int i) in 
-        let new_hi = low +. (step *. float_of_int (i + 1)) in 
-        let weight = wide_normal_cdf new_hi -. wide_normal_cdf new_low in
-        aux (i + 1) ((Wide (new_low, new_hi)) :: acc_d) ((weight /. total_weight) :: acc_w)
-      in aux 0 [] [] *)
-
-let split_var_with_weight (name, distribution) num_interval : (string * Expr.distr) list * float list = 
-  let (split_distribution, weights) = split_var_aux_with_weight distribution num_interval in
-  let split_vars = List.map (fun d -> (name, d)) split_distribution in
-  (split_vars, weights)
-
-let split_vars_with_weight vars num_interval = 
-  let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
-  let split_vars_list = List.map (fun (name, distribution) -> split_var_with_weight (name, distribution) num_interval) vars_list in
-  let combinations = List.map hashtbl_of_list (cartesian_product (List.map fst split_vars_list)) in
-  let weights = cartesian_product_float (List.map snd split_vars_list) in
-  List.combine combinations weights
-
-(* TODO: do testing here *)
-(* let _ = 
-  let filename = Sys.argv.(1) in 
-  (* let eps = 2. ** (-24.) in 
-  let c = 0.99 in
-  let num_intervals = 16 in 
-  let order = 2. in *)
-  let (vars, f) = process_input filename in
-  let (tf, k) = tilde f in
-  let lod = list_of_ei_diffs tf k in
-  let (f_num, f_denom) = get_num_denom_single vars f in
-  let hiqs = get_hiqs vars lod f_denom in
-  let sod = sum_of_expanded_exprs hiqs in
-  let p = invert_negative_term (separate_expanded_expr sod) in
-  let p_opt = invert_negative_term (separate_expanded_expr_opt sod vars) in 
-  printf "sod: %s\n" (string_of_expanded_expr sod);
-  printf "p: %s\n" (string_of_expanded_expr p);
-  printf "p_opt: %s\n" (string_of_expanded_expr p_opt) *)
 
 let _ = 
   let filename = Sys.argv.(1) in 
