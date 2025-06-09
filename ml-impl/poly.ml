@@ -7,34 +7,43 @@ open Partition
 open Error2
 open Unix
 
-let u_init vars eps pn c order : float = 
+let u_old vars eps pn c order : float = 
   let rcd = Hashtbl.create 20 in 
   let epn = fst (expectation_of_expanded_expr pn vars rcd) in 
-  let u_init = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
+  let u_old = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
+  u_old
+
+let u_init vars eps p c : float = 
+  let rcd = Hashtbl.create 20 in 
+  let ep = fst (expectation_of_expanded_expr p vars rcd) in 
+  let u_init = eps *. ep in 
   u_init
 
-let u_flag_float_sub vars rcd eps pn u order : float = 
-  (* let pn = power_of_expanded_expr p order in  *)
-  let epn = fst (expectation_of_expanded_expr pn vars rcd) in
-  let flag_float = eps ** (float_of_int order) *. epn /. (u ** 2.) in 
+let u_flag_float_sub vars rcd eps p u order : float = 
+  let k_u = add_expanded_exprs (const_times_expanded_expr eps p) (const_expanded_expr (-. u)) in 
+  let mu = fst (expectation_of_expanded_expr k_u vars rcd) in
+  (* flag_float_num = (Ku - mu)^order *)
+  let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
+    (add_expanded_exprs k_u (const_expanded_expr (-. mu))) order) in
+  let flag_float = fst (expectation_of_expanded_expr flag_float_num vars rcd) /. (mu ** (float_of_int order)) in 
   if flag_float > 1. then 1. else flag_float
 
-let u_flag_float_weighted vars_weight_list rcd eps pn u order : float = 
+let u_flag_float_weighted vars_weight_list rcd eps p u order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
-    let cur = u_flag_float_sub vars rcd eps pn u order in 
+    let cur = u_flag_float_sub vars rcd eps p u order in 
     (* printf "cur: %e\n" cur; *)
     acc +. (cur *. weight)) 0. vars_weight_list in 
   sum 
 
-let rec bin_search_u_weighted vars_weight_list rcd eps pn c order left right : float = 
+let rec bin_search_u_weighted vars_weight_list rcd eps p c order left right : float = 
   printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
-  let flag_float = u_flag_float_weighted vars_weight_list rcd eps pn mid order in 
-  printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  let flag_float = u_flag_float_weighted vars_weight_list rcd eps p mid order in 
+  printf "Mid: %e, Flag Float: %e\n" mid flag_float;
   print_endline "";
-  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps pn c order mid right
+  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps p c order mid right
   else if (right /. left) < 1.2 then mid 
-  else bin_search_u_weighted vars_weight_list rcd eps pn c order left mid
+  else bin_search_u_weighted vars_weight_list rcd eps p c order left mid
 
 let _ = 
   let filename = Sys.argv.(1) in 
@@ -47,13 +56,17 @@ let _ =
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
-  let pn = power_of_expanded_expr p order in 
-  let u_init = u_init vars eps pn c order in 
-  printf "u_init: %e\n" u_init;
+  let u_init = u_init vars eps p c in 
+  printf "u_init: %e\n" u_init; 
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
-  printf "flag_float for u_init: %e\n" (u_flag_float_weighted vars_weight_list rcd eps pn u_init order);
-  let u = bin_search_u_weighted vars_weight_list rcd eps pn c order (u_init /. 100.) (u_init *. 1.01) in 
-  printf "u: %e\n" u
+  let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_init *. 10000.) in 
+  printf "u: %e\n" u;
+  (* Just for comparison *)
+  let pn = power_of_expanded_expr p order in 
+  let u_old = u_old vars eps pn c order in 
+  printf "u_old: %e \n" u_old
+  (* End of just for comparison *)
+  
 
 
 

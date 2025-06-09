@@ -118,8 +118,6 @@ let _ =
   let sod = sum_of_expanded_exprs hiqs in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in
   let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
-  printf "p: %s\n" (string_of_expanded_expr p);
-  printf "q2: %s\n" (string_of_expanded_expr q2);
   let u_init = u_init vars eps p q2 in
   print_endline ("u_init: " ^ (string_of_float u_init));
   let vars_weight_list = split_vars_with_weight vars num_intervals in
