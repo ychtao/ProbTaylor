@@ -56,15 +56,17 @@ let _ =
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
+  printf "p: %s\n" (string_of_expanded_expr p);
   let u_init = u_init vars eps p c in 
   printf "u_init: %e\n" u_init; 
-  let vars_weight_list = split_vars_with_weight vars num_intervals in 
-  let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_init *. 10000.) in 
-  printf "u: %e\n" u;
-  (* Just for comparison *)
   let pn = power_of_expanded_expr p order in 
   let u_old = u_old vars eps pn c order in 
-  printf "u_old: %e \n" u_old
+  let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_old *. 1.01) in 
+  printf "%s\n" filename;
+  printf "u: %e\n" u;
+  (* Just for comparison *)
+  printf "u_old: %e \n\n" u_old
   (* End of just for comparison *)
   
 
