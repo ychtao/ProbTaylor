@@ -2,11 +2,63 @@ open Expr
 open Input_parser
 open Printf
 open Ops
-open Expectation
+open Expectation_num
+open Partition
 open Error2
 open Unix
 
-let bound1_poly filename eps c order = 
+let u_init vars eps pn c order : float = 
+  let rcd = Hashtbl.create 20 in 
+  let epn = fst (expectation_of_expanded_expr pn vars rcd) in 
+  let u_init = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
+  u_init
+
+let u_flag_float_sub vars rcd eps pn u order : float = 
+  (* let pn = power_of_expanded_expr p order in  *)
+  let epn = fst (expectation_of_expanded_expr pn vars rcd) in
+  let flag_float = eps ** (float_of_int order) *. epn /. (u ** 2.) in 
+  if flag_float > 1. then 1. else flag_float
+
+let u_flag_float_weighted vars_weight_list rcd eps pn u order : float = 
+  let sum = List.fold_left (fun acc (vars, weight) ->
+    let cur = u_flag_float_sub vars rcd eps pn u order in 
+    (* printf "cur: %e\n" cur; *)
+    acc +. (cur *. weight)) 0. vars_weight_list in 
+  sum 
+
+let rec bin_search_u_weighted vars_weight_list rcd eps pn c order left right : float = 
+  printf "Left: %e, Right: %e\n" left right;
+  let mid = (left *. right) ** 0.5 in 
+  let flag_float = u_flag_float_weighted vars_weight_list rcd eps pn mid order in 
+  printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  print_endline "";
+  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps pn c order mid right
+  else if (right /. left) < 1.2 then mid 
+  else bin_search_u_weighted vars_weight_list rcd eps pn c order left mid
+
+let _ = 
+  let filename = Sys.argv.(1) in 
+  let eps = 2. ** (-24.) in 
+  let c = 0.99 in 
+  let num_intervals = 16 in 
+  let order = 2 in 
+  let rcd = Hashtbl.create 20 in 
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
+  let pn = power_of_expanded_expr p order in 
+  let u_init = u_init vars eps pn c order in 
+  printf "u_init: %e\n" u_init;
+  let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  printf "flag_float for u_init: %e\n" (u_flag_float_weighted vars_weight_list rcd eps pn u_init order);
+  let u = bin_search_u_weighted vars_weight_list rcd eps pn c order (u_init /. 100.) (u_init *. 1.01) in 
+  printf "u: %e\n" u
+
+
+
+
+(* let bound1_poly filename eps c order = 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   (* print_endline ("tf: " ^ (string_of_expr tf)); *)
@@ -21,18 +73,21 @@ let bound1_poly filename eps c order =
   let bound = eps *. ((esod /. (1. -. c)) ** (1. /. (float_of_int order))) in
   bound
 
-(* let _ = 
+let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
-  let order = int_of_string Sys.argv.(2) in 
+  let order = 2 in 
   let start_time = Unix.gettimeofday () in
   let bound = bound1_poly filename eps c order in 
   print_endline ("First order error bound = " ^ (string_of_float bound));
   let elapsed_time = Unix.gettimeofday () -. start_time in
   print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds") *)
 
-let _ = 
+
+(* The following code tries all even orders between 2 and 30 and gives the optimal threshold *)
+(* The following code does not use interval partition or binary search *)
+(* let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in
   let c = 0.99 in
@@ -51,7 +106,7 @@ let _ =
   print_endline ("First order error bound = " ^ (string_of_float best_bound));
   print_endline ("Corresponding analysis order = " ^ (string_of_int best_order));
   let elapsed_time = Unix.gettimeofday () -. start_time in
-  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds")
+  print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds") *)
 
 (* Suppose oc has already been open *)
 let print_ed_ranges oc vars k eps dlt = 
