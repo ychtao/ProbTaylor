@@ -61,13 +61,11 @@ let _ =
   printf "u_init: %e\n" u_init; 
   let pn = power_of_expanded_expr p order in 
   let u_old = u_old vars eps pn c order in 
+  printf "u_old: %e\n" u_old;
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
   let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_old *. 1.01) in 
   printf "%s\n" filename;
-  printf "u: %e\n" u;
-  (* Just for comparison *)
-  printf "u_old: %e \n\n" u_old
-  (* End of just for comparison *)
+  printf "u: %e\n\n" u
   
 
 
