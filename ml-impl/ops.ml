@@ -6,6 +6,19 @@ let hashtbl_of_list l =
   List.iter (fun (k, v) -> Hashtbl.add tbl k v) l;
   tbl
 
+let map_tailrec f lst = 
+  let rec aux acc = function 
+  | [] -> List.rev acc 
+  | x :: xs -> aux (f x :: acc) xs in
+  aux [] lst
+
+let combine_tailrec lst1 lst2 = 
+  let rec aux acc l1 l2 = match l1, l2 with 
+  | [], [] -> List.rev acc
+  | x :: xs, y :: ys -> aux ((x,y) :: acc) xs ys 
+  | _ -> failwith "combine failure"
+in aux [] lst1 lst2
+
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)

@@ -4,11 +4,11 @@ open Ops
 open Expectation_num
 open Printf
 
-let rec cartesian_product = function
+(* let rec cartesian_product = function
   | [] -> [[]]
   | xs :: xss ->
       let rest = cartesian_product xss in
-      List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs)
+      List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs) *)
 
 let rec cartesian_product_aux acc = function
   | [] -> acc
@@ -17,23 +17,24 @@ let rec cartesian_product_aux acc = function
     cartesian_product_aux acc xss
 
 let cartesian_product lst = 
-  List.map List.rev (cartesian_product_aux [[]] lst)
+  (* List.map List.rev (cartesian_product_aux [[]] lst) *)
+  let ret = cartesian_product_aux [[]] lst in 
+  ret
 
-(* let rec cartesian_product_aux acc = function 
-  | [] -> acc
-  | xs :: xss ->
-    let acc' = List.fold_left (fun acc2 x -> 
-      List.fold_left (fun acc3 r -> (x :: r) :: acc3) acc2 acc) [] xs in
-      cartesian_product_aux acc' xss 
-
-let cartesian_product lst = 
-  cartesian_product_aux [[]] lst *)
-
-let rec cartesian_product_float = function 
+(* let rec cartesian_product_float = function 
   | [] -> [1. ]
   | xs :: xss ->
       let rest = cartesian_product_float xss in 
-      List.flatten (List.map (fun x -> List.map (fun r -> x *. r) rest) xs)
+      List.flatten (List.map (fun x -> List.map (fun r -> x *. r) rest) xs) *)
+
+let rec cartesian_product_float_aux acc = function 
+  | [] -> acc 
+  | xs :: xss -> 
+    let acc = List.concat_map (fun x -> List.map (fun ys -> x *. ys) acc) xs in 
+    cartesian_product_float_aux acc xss
+
+let cartesian_product_float lst = 
+  cartesian_product_float_aux [1.] lst
 
 let split_var_aux_with_weight (distribution : Expr.distr) num_interval : (Expr.distr list * float list) = 
   match distribution with 
@@ -89,6 +90,8 @@ let split_var_with_weight (name, distribution) num_interval : (string * Expr.dis
 let split_vars_with_weight vars num_interval = 
   let vars_list = Hashtbl.fold (fun key value acc -> (key, value) :: acc) vars [] in
   let split_vars_list = List.map (fun (name, distribution) -> split_var_with_weight (name, distribution) num_interval) vars_list in
-  let combinations = List.map hashtbl_of_list (cartesian_product (List.map fst split_vars_list)) in
+  let cartprod = (cartesian_product (List.map fst split_vars_list)) in 
+  let combinations = map_tailrec hashtbl_of_list cartprod in
   let weights = cartesian_product_float (List.map snd split_vars_list) in
-  List.combine combinations weights
+  combine_tailrec combinations weights
+  (* List.combine combinations weights  *)
