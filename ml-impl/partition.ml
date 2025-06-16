@@ -1,36 +1,23 @@
 open Expr
 open Input_parser
 open Ops 
-open Expectation_num
+open Expectation
 open Printf
-
-(* let rec cartesian_product = function
-  | [] -> [[]]
-  | xs :: xss ->
-      let rest = cartesian_product xss in
-      List.flatten (List.map (fun x -> List.map (fun r -> x :: r) rest) xs) *)
 
 let rec cartesian_product_aux acc = function
   | [] -> acc
   | xs :: xss ->
-    let acc = List.concat_map (fun x -> List.map (fun ys -> x :: ys) acc) xs in
+    let acc = List.concat_map (fun x -> map_tailrec (fun ys -> x :: ys) acc) xs in
     cartesian_product_aux acc xss
 
 let cartesian_product lst = 
-  (* List.map List.rev (cartesian_product_aux [[]] lst) *)
-  let ret = cartesian_product_aux [[]] lst in 
-  ret
-
-(* let rec cartesian_product_float = function 
-  | [] -> [1. ]
-  | xs :: xss ->
-      let rest = cartesian_product_float xss in 
-      List.flatten (List.map (fun x -> List.map (fun r -> x *. r) rest) xs) *)
+  (* List.iter (fun l -> printf "length of sublist: %d\n" (List.length l)) lst; *)
+  cartesian_product_aux [[]] lst
 
 let rec cartesian_product_float_aux acc = function 
   | [] -> acc 
   | xs :: xss -> 
-    let acc = List.concat_map (fun x -> List.map (fun ys -> x *. ys) acc) xs in 
+    let acc = List.concat_map (fun x -> map_tailrec (fun ys -> x *. ys) acc) xs in 
     cartesian_product_float_aux acc xss
 
 let cartesian_product_float lst = 

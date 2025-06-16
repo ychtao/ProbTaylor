@@ -2,7 +2,7 @@ open Expr
 open Input_parser
 open Printf
 open Ops
-open Expectation_num
+open Expectation
 open Partition
 open Error2
 open Unix
@@ -19,6 +19,7 @@ let u_init vars eps p c : float =
   let u_init = eps *. ep in 
   u_init
 
+(* order must be even *)
 let u_flag_float_sub vars rcd eps p u order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p) (const_expanded_expr (-. u)) in 
   let mu = fst (expectation_of_expanded_expr k_u vars rcd) in
@@ -45,27 +46,53 @@ let rec bin_search_u_weighted vars_weight_list rcd eps p c order left right : fl
   else if (right /. left) < 1.1 then mid 
   else bin_search_u_weighted vars_weight_list rcd eps p c order left mid
 
+let get_order_arg () =
+  let default_order = 2 in
+  let order = ref default_order in
+  let argv = Array.to_list Sys.argv in
+  let rec parse = function
+    | "--order" :: v :: _ -> (try order := int_of_string v with _ -> ()); ()
+    | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !order
+
+let get_num_intervals_arg () =
+  let default_num = 32 in
+  let num_intervals = ref default_num in
+  let argv = Array.to_list Sys.argv in
+  let rec parse = function
+    | "--num" :: v :: _ -> (try num_intervals := int_of_string v with _ -> ()); ()
+    | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !num_intervals
+
+let get_nm_flag () = 
+  Array.exists (fun arg -> arg = "--nm") Sys.argv
+
 let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
-  let num_intervals = 8 in 
-  let order = 2 in 
+  let num_intervals = get_num_intervals_arg () in 
+  let order = get_order_arg () in 
   let rcd = Hashtbl.create 20 in 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
-  (* printf "p: %s\n" (string_of_expanded_expr p); *)
+  printf "p\n";
+  let pn = power_of_expanded_expr p order in 
+  printf "pn\n";
+  let u_old = u_old vars eps pn c order in 
+  if get_nm_flag() then printf "order = %d, u = %e" order u_old else
   let u_init = u_init vars eps p c in 
   printf "u_init: %e\n" u_init; 
-  let pn = power_of_expanded_expr p order in 
-  let u_old = u_old vars eps pn c order in 
   printf "u_old: %e\n" u_old;
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
   let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_old *. 1.01) in 
   printf "%s\n" filename;
-  printf "u: %e\n\n" u
+  printf "u: %e\n" u;
+  printf "order = %d, num_intervals = %d\n" order num_intervals
   
 
 

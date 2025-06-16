@@ -239,7 +239,7 @@ let normalize_term (c, vars) =
 
 (* Normalize an expanded expression *)
 let normalize_expanded_expr (f : expanded_expr) : expanded_expr =
-  List.map normalize_term f
+  map_tailrec normalize_term f
 
 (* Merge similar terms*)
 let merge_terms (f : expanded_expr) : expanded_expr = 
@@ -367,22 +367,18 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
         match f2_terms with 
         | [] -> acc2 
         | t2 :: rest2 -> let new_term = product_of_terms t1 t2 in 
-          (* for debugging *)
-          (* (if Float.is_nan (coef_of_term new_term) then 
-            (printf "t1: %s\n" (string_of_term t1);
-            printf "t2: %s\n" (string_of_term t2);
-            printf "new_term: %s\n\n" (string_of_term new_term))); *)
-          (* end debugging *)
           aux2 (new_term :: acc2) rest2
       in let new_acc = aux2 acc f2 in 
       aux new_acc rest1 in
-    simplify_expanded_expr (aux [] f1)
+    let ret = aux [] f1 in simplify_expanded_expr ret
 
 let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
   let rec aux f n acc = 
     if n = 0 then acc 
-    else let new_acc = product_of_expanded_expr acc f in 
-    aux f (n - 1) new_acc in
+    else
+      (printf "current n: %d\n" n; printf "length of acc: %d\n" (List.length acc);
+      let new_acc = product_of_expanded_expr acc f in 
+    aux f (n - 1) new_acc) in
   aux f n (expand_and_simplify (Const 1.0))
 
 (* let sum_of_expanded_exprs (ees : expanded_expr list) : expanded_expr = 

@@ -281,7 +281,7 @@ let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) (r
   let (c, rvs) = t in 
   printf "Computing expectation of term: %s\n" (string_of_term t);
   let (ret, rcd') = expectation_of_rvs rvs vars rcd in 
-  printf "%s : %f\n\n" (string_of_term t) (c *. ret);
+  printf "%s : %e\n\n" (string_of_term t) (c *. ret);
   (c *. ret, rcd')
 
 let expectation_of_expanded_expr_verbose (f : expanded_expr) (vars : (string, distr) Hashtbl.t) (rcd : rcd) : (float * rcd) = 
