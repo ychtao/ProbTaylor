@@ -17,9 +17,9 @@ all:
 	ocamlfind ocamlc -package owl -linkpkg -c expectation_num.ml
 	ocamlc -c partition.ml
 	ocamlc -c poly.ml
-	ocamlc -c div.ml
-	ocamlfind ocamlc -package owl -linkpkg -o a.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo partition.cmo poly.cmo 
-	ocamlfind ocamlc -package owl -linkpkg -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo partition.cmo error2.cmo div.cmo
+	# ocamlc -c div.ml
+	ocamlc -c main.ml
+	ocamlfind ocamlc -package owl -linkpkg -o pt lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo partition.cmo error2.cmo poly.cmo main.cmo
 
 # test: 
 # 	ocamlc -c expr.ml
@@ -36,7 +36,8 @@ all:
 # 	ocamlc -c temp.ml
 # 	ocamlfind ocamlc -package owl -linkpkg  -o test.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo temp.cmo
 
-
+# ocamlfind ocamlc -package owl -linkpkg -o a.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo error2.cmo partition.cmo poly.cmo 
+# ocamlfind ocamlc -package owl -linkpkg -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo partition.cmo error2.cmo div.cmo
 
 clean:
-	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt
+	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt pt

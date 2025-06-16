@@ -375,10 +375,8 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
 let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
   let rec aux f n acc = 
     if n = 0 then acc 
-    else
-      (printf "current n: %d\n" n; printf "length of acc: %d\n" (List.length acc);
-      let new_acc = product_of_expanded_expr acc f in 
-    aux f (n - 1) new_acc) in
+    else let new_acc = product_of_expanded_expr acc f in 
+    aux f (n - 1) new_acc in
   aux f n (expand_and_simplify (Const 1.0))
 
 (* let sum_of_expanded_exprs (ees : expanded_expr list) : expanded_expr = 

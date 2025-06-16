@@ -7,20 +7,20 @@ open Partition
 open Error2
 open Unix
 
-let u_old vars eps pn c order : float = 
+let u_nm vars eps pn c order : float = 
   let rcd = Hashtbl.create 20 in 
   let epn = fst (expectation_of_expanded_expr pn vars rcd) in 
-  let u_old = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
-  u_old
+  let u_nm = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
+  u_nm
 
-let u_init vars eps p c : float = 
+let cmb_u_init vars eps p c : float = 
   let rcd = Hashtbl.create 20 in 
   let ep = fst (expectation_of_expanded_expr p vars rcd) in 
-  let u_init = eps *. ep in 
-  u_init
+  let cmb_u_init = eps *. ep in 
+  cmb_u_init
 
 (* order must be even *)
-let u_flag_float_sub vars rcd eps p u order : float = 
+let cmb_flag_float_sub vars rcd eps p u order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p) (const_expanded_expr (-. u)) in 
   let mu = fst (expectation_of_expanded_expr k_u vars rcd) in
   (* flag_float_num = (Ku - mu)^order *)
@@ -29,47 +29,63 @@ let u_flag_float_sub vars rcd eps p u order : float =
   let flag_float = fst (expectation_of_expanded_expr flag_float_num vars rcd) /. (mu ** (float_of_int order)) in 
   if flag_float > 1. then 1. else flag_float
 
-let u_flag_float_weighted vars_weight_list rcd eps p u order : float = 
+let cmb_flag_float vars_weight_list rcd eps p u order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
-    let cur = u_flag_float_sub vars rcd eps p u order in 
+    let cur = cmb_flag_float_sub vars rcd eps p u order in 
     (* printf "cur: %e\n" cur; *)
     acc +. (cur *. weight)) 0. vars_weight_list in 
   sum 
 
-let rec bin_search_u_weighted vars_weight_list rcd eps p c order left right : float = 
-  printf "Left: %e, Right: %e\n" left right;
+let rec cmb_bin_search vars_weight_list rcd eps p c order left right : float = 
+  (* printf "Left: %e, Right: %e\n" left right; *)
   let mid = (left *. right) ** 0.5 in 
-  let flag_float = u_flag_float_weighted vars_weight_list rcd eps p mid order in 
-  printf "Mid: %e, Flag Float: %e\n" mid flag_float;
-  print_endline "";
-  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps p c order mid right
+  let flag_float = cmb_flag_float vars_weight_list rcd eps p mid order in 
+  (* printf "Mid: %e, Flag Float: %e\n" mid flag_float; flush_all (); *)
+  if flag_float > 1. -. c then cmb_bin_search vars_weight_list rcd eps p c order mid right
   else if (right /. left) < 1.1 then mid 
-  else bin_search_u_weighted vars_weight_list rcd eps p c order left mid
+  else cmb_bin_search vars_weight_list rcd eps p c order left mid
 
-let get_order_arg () =
-  let default_order = 2 in
-  let order = ref default_order in
-  let argv = Array.to_list Sys.argv in
-  let rec parse = function
-    | "--order" :: v :: _ -> (try order := int_of_string v with _ -> ()); ()
-    | _ :: tl -> parse tl
-    | [] -> ()
-  in parse argv; !order
+let naive_markov filename eps cfd order : float = 
+  (* let rcd = Hashtbl.create 20 in  *)
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
+  let pn = power_of_expanded_expr p order in 
+  let u_nm = u_nm vars eps pn cfd order in u_nm
 
-let get_num_intervals_arg () =
-  let default_num = 32 in
-  let num_intervals = ref default_num in
-  let argv = Array.to_list Sys.argv in
-  let rec parse = function
-    | "--num" :: v :: _ -> (try num_intervals := int_of_string v with _ -> ()); ()
-    | _ :: tl -> parse tl
-    | [] -> ()
-  in parse argv; !num_intervals
+let naive_markov_opt filename eps cfd max_order : float * int = 
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
+  let rec find_best best_u best_order current_order = 
+    if current_order > max_order then (best_u, best_order)
+    else try 
+      let pn = power_of_expanded_expr p current_order in 
+      let current_u = u_nm vars eps pn cfd current_order in 
+      printf "Current iteration: u = %e, order = %d\n" current_u current_order; flush_all ();
+      if current_u < best_u then find_best current_u current_order (current_order + 2)
+      else find_best best_u best_order (current_order + 2)
+    with 
+      | _ -> failwith "error" in 
+  let (best_u, best_order) = find_best infinity 0 2 in 
+  (best_u, best_order)
 
-let get_nm_flag () = 
-  Array.exists (fun arg -> arg = "--nm") Sys.argv
+let central_moment_based filename eps cfd order num_intervals : float = 
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
+  let u_init = cmb_u_init vars eps p cfd in 
+  let pn = power_of_expanded_expr p order in 
+  let u_nm = u_nm vars eps pn cfd order in 
+  let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  let u = cmb_bin_search vars_weight_list () eps p cfd order (u_init *. 1.01) (u_nm *. 1.01) in 
+  u
 
-let _ = 
+
+(* let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in 
@@ -83,16 +99,16 @@ let _ =
   printf "p\n";
   let pn = power_of_expanded_expr p order in 
   printf "pn\n";
-  let u_old = u_old vars eps pn c order in 
-  if get_nm_flag() then printf "order = %d, u = %e" order u_old else
+  let u_nm = u_nm vars eps pn c order in 
+  if get_nm_flag() then printf "order = %d, u = %e" order u_nm else
   let u_init = u_init vars eps p c in 
   printf "u_init: %e\n" u_init; 
-  printf "u_old: %e\n" u_old;
+  printf "u_nm: %e\n" u_nm;
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
-  let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_old *. 1.01) in 
+  let u = bin_search_u_weighted vars_weight_list rcd eps p c order (u_init *. 1.01) (u_nm *. 1.01) in 
   printf "%s\n" filename;
   printf "u: %e\n" u;
-  printf "order = %d, num_intervals = %d\n" order num_intervals
+  printf "order = %d, num_intervals = %d\n" order num_intervals *)
   
 
 
