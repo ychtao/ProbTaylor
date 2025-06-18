@@ -284,8 +284,8 @@ let expectation_of_term (t : term) (vars : (string, distr) Hashtbl.t) : float =
   (* Printf.printf "expectation of term %s = %f\n" (string_of_term t) ret; *)
   ret
 
-let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) : float = 
-  List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f
+let expectation_of_expanded_expr (f : expanded_expr) (vars : (string, distr) Hashtbl.t) rcd : float * unit = 
+  (List.fold_left (fun acc t -> acc +. (expectation_of_term t vars)) 0. f, ())
 
 let expectation_of_term_verbose (t : term) (vars : (string, distr) Hashtbl.t) : float = 
   let (c, rvs) = t in 

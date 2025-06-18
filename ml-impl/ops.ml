@@ -6,6 +6,19 @@ let hashtbl_of_list l =
   List.iter (fun (k, v) -> Hashtbl.add tbl k v) l;
   tbl
 
+let map_tailrec f lst = 
+  let rec aux acc = function 
+  | [] -> List.rev acc 
+  | x :: xs -> aux (f x :: acc) xs in
+  aux [] lst
+
+let combine_tailrec lst1 lst2 = 
+  let rec aux acc l1 l2 = match l1, l2 with 
+  | [], [] -> List.rev acc
+  | x :: xs, y :: ys -> aux ((x,y) :: acc) xs ys 
+  | _ -> failwith "combine failure"
+in aux [] lst1 lst2
+
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)
@@ -132,7 +145,7 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
   | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
   | Div (f1, Const n2) -> expand_expr (Mul ((Const (1. /. n2)), f1))
-  | _ -> failwith "Not supported"
+  | _ -> failwith "Expand: Not supported"
 
 (* let tappend (l1 : 'a list) (l2 : 'a list) : 'a list = 
   List.rev_append (List.rev l1) l2
@@ -226,7 +239,7 @@ let normalize_term (c, vars) =
 
 (* Normalize an expanded expression *)
 let normalize_expanded_expr (f : expanded_expr) : expanded_expr =
-  List.map normalize_term f
+  map_tailrec normalize_term f
 
 (* Merge similar terms*)
 let merge_terms (f : expanded_expr) : expanded_expr = 
@@ -354,16 +367,10 @@ let product_of_expanded_expr (f1 : expanded_expr) (f2 : expanded_expr) : expande
         match f2_terms with 
         | [] -> acc2 
         | t2 :: rest2 -> let new_term = product_of_terms t1 t2 in 
-          (* for debugging *)
-          (* (if Float.is_nan (coef_of_term new_term) then 
-            (printf "t1: %s\n" (string_of_term t1);
-            printf "t2: %s\n" (string_of_term t2);
-            printf "new_term: %s\n\n" (string_of_term new_term))); *)
-          (* end debugging *)
           aux2 (new_term :: acc2) rest2
       in let new_acc = aux2 acc f2 in 
       aux new_acc rest1 in
-    simplify_expanded_expr (aux [] f1)
+    let ret = aux [] f1 in simplify_expanded_expr ret
 
 let power_of_expanded_expr (f : expanded_expr) (n : int) : expanded_expr = 
   let rec aux f n acc = 
