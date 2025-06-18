@@ -1,6 +1,6 @@
 open Printf
 open Poly
-(* open Div *)
+open Div
 
 let get_eps () = 
   let default_eps = 2. ** (-24.) in 
@@ -17,7 +17,7 @@ let get_cfd () =
   let cfd = ref default_cfd in 
   let argv = Array.to_list Sys.argv in 
   let rec parse = function
-  | "--eps" :: v :: _ -> (try cfd := float_of_string v with _ -> ()); ()
+  | "--cfd" :: v :: _ -> (try cfd := float_of_string v with _ -> ()); ()
   | _ :: tl -> parse tl
     | [] -> ()
   in parse argv; !cfd
@@ -51,6 +51,9 @@ let get_cmb_flag () =
 let get_nm_opt_flag () =
   Array.exists (fun arg -> arg = "--nmopt") Sys.argv
 
+let get_div_flag () = 
+  Array.exists (fun arg -> arg = "--div") Sys.argv 
+
 let _ = 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
@@ -66,6 +69,11 @@ let _ =
     let u = central_moment_based filename eps cfd order num_intervals in 
     printf "%s\n" filename;
     printf "Central moment based, order = %d, num = %d\n" order num_intervals;
+    printf "1st-order error threshold = %e\n" u
+  ) else if get_div_flag () then (
+    let u = central_moment_based_div filename eps cfd order num_intervals in 
+    printf "%s\n" filename;
+    printf "Central moment based (fractional expression), order = %d, num = %d\n" order num_intervals;
     printf "1st-order error threshold = %e\n" u
   ) else (
     let (best_u, best_order) = naive_markov_opt filename eps cfd order in 

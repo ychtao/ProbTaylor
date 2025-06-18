@@ -145,7 +145,7 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
   | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
   | Div (f1, Const n2) -> expand_expr (Mul ((Const (1. /. n2)), f1))
-  | _ -> failwith "Not supported"
+  | _ -> failwith "Expand: Not supported"
 
 (* let tappend (l1 : 'a list) (l2 : 'a list) : 'a list = 
   List.rev_append (List.rev l1) l2

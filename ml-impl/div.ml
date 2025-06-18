@@ -39,15 +39,17 @@ let get_hiqs vars lod f_denom =
     expand_and_simplify num in 
   List.map times_q2 lod
 
+let u_init vars eps p q2 = 
+  let rcd = Hashtbl.create 20 in
+  let (ep, rcd) = expectation_of_expanded_expr p vars rcd in 
+  let (eq2, rcd) = expectation_of_expanded_expr q2 vars rcd in
+  eps *. (ep /. eq2)
 
-(* -1: search for the left half in the next iteration *)  
-(* 1: search for the right half in the next iteration *)
-(* Currently not used in the above way, instead only output *)
-(* the computed upper bound for violation probability *)
-let u_flag_float_sub vars rcd eps p q2 u c order : float = 
+let div_flag_float_sub vars rcd eps p q2 u c order : float = 
   let k_u = add_expanded_exprs (const_times_expanded_expr eps p)
     (const_times_expanded_expr (-. u) q2) in 
   let mu =  fst (expectation_of_expanded_expr k_u vars rcd) in
+  if mu >= 0. then 1. else 
   (* flag_float_num = (Ku - mu)^order *)
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
@@ -55,30 +57,24 @@ let u_flag_float_sub vars rcd eps p q2 u c order : float =
   if Float.is_nan flag_float then failwith "flag_float is NaN"
   else if flag_float > 1. then 1. else flag_float
 
-let u_flag_float_weighted vars_weight_list rcd eps p q2 u c order : float = 
+let div_flag_float vars_weight_list rcd eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
-    let cur = u_flag_float_sub vars rcd eps p q2 u c order in 
+    let cur = div_flag_float_sub vars rcd eps p q2 u c order in 
     (* (if cur <= 0. then failwith "negative upper bound"); *)
     acc +. (cur *. weight)
   ) 0. vars_weight_list in 
   sum 
 
 (* Order must be even *)
-let rec bin_search_u_weighted vars_weight_list rcd eps p q2 c order left right : float =
+let rec div_bin_search vars_weight_list rcd eps p q2 c order left right : float =
   printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
-  let flag_float = u_flag_float_weighted vars_weight_list rcd eps p q2 mid c order in
+  let flag_float = div_flag_float vars_weight_list rcd eps p q2 mid c order in
   printf "Mid: %e, Flag Float: %f\n" mid flag_float;
   print_endline "";
-  if flag_float > 1. -. c then bin_search_u_weighted vars_weight_list rcd eps p q2 c order mid right 
+  if flag_float > 1. -. c then div_bin_search vars_weight_list rcd eps p q2 c order mid right 
   else if (right /. left) < 1.2 then mid 
-  else bin_search_u_weighted vars_weight_list rcd eps p q2 c order left mid
-
-let u_init vars eps p q2 = 
-  let rcd = Hashtbl.create 20 in
-  let (ep, rcd) = expectation_of_expanded_expr p vars rcd in 
-  let (eq2, rcd) = expectation_of_expanded_expr q2 vars rcd in
-  eps *. (ep /. eq2)
+  else div_bin_search vars_weight_list rcd eps p q2 c order left mid
 
 (* let split_var_aux (distribution : Expr.distr) num_interval = 
   match distribution with 
@@ -103,7 +99,25 @@ let u_init vars eps p q2 =
   let combinations = cartesian_product split_var_list in
   List.map hashtbl_of_list combinations *)
 
-let _ = 
+let central_moment_based_div filename eps cfd order num_intervals : float =
+  printf "here\n";
+  let rcd = Hashtbl.create 20 in 
+  let order_float = float_of_int order in 
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let lod = list_of_ei_diffs tf k in 
+  let (f_num, f_denom) = get_num_denom_single vars f in 
+  let hiqs = get_hiqs vars lod f_denom in 
+  let sod = sum_of_expanded_exprs hiqs in 
+  let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in
+  let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
+  let u_init = u_init vars eps p q2 in 
+  let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  let u = div_bin_search vars_weight_list rcd eps p q2 cfd order_float (u_init *. 1.01) (u_init *. 20000.) in 
+  u
+
+
+(* let _ = 
   let filename = Sys.argv.(1) in 
   let eps = 2. ** (-24.) in 
   let c = 0.99 in
@@ -122,7 +136,7 @@ let _ =
   print_endline ("u_init: " ^ (string_of_float u_init));
   let vars_weight_list = split_vars_with_weight vars num_intervals in
   let u = bin_search_u_weighted vars_weight_list rcd eps p q2 c order (u_init *. 1.01) (u_init *. 20000.) in
-  print_endline ("u: " ^ (string_of_float u));
+  print_endline ("u: " ^ (string_of_float u)); *)
 
 (* Test split_vars_with_weight *)
 (* let _ = 
