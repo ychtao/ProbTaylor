@@ -2,8 +2,8 @@ open Expr
 open Input_parser
 open Printf
 open Ops
-open Expectation_num 
-(* open Expectation *)
+(* open Expectation_num  *)
+open Expectation
 open Partition
 open Error2
 open Unix
@@ -70,7 +70,7 @@ let rec div_bin_search vars_weight_list rcd eps p q2 c order left right : float 
   printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
   let flag_float = div_flag_float vars_weight_list rcd eps p q2 mid c order in
-  printf "Mid: %e, Flag Float: %f\n" mid flag_float;
+  printf "Mid: %e, Flag Float: %f\n" mid flag_float; flush_all ();
   print_endline "";
   if flag_float > 1. -. c then div_bin_search vars_weight_list rcd eps p q2 c order mid right 
   else if (right /. left) < 1.2 then mid 
