@@ -4,10 +4,18 @@ open Ops
 open Expectation
 open Printf
 
+let concat_map f l = 
+  let rec aux f acc = function
+  | [] -> List.rev acc
+  | x :: l -> 
+      let xs = f x in 
+      aux f (List.rev_append xs acc) l
+  in aux f [] l
+
 let rec cartesian_product_aux acc = function
   | [] -> acc
   | xs :: xss ->
-    let acc = List.concat_map (fun x -> map_tailrec (fun ys -> x :: ys) acc) xs in
+    let acc = concat_map (fun x -> map_tailrec (fun ys -> x :: ys) acc) xs in
     cartesian_product_aux acc xss
 
 let cartesian_product lst = 
@@ -17,7 +25,7 @@ let cartesian_product lst =
 let rec cartesian_product_float_aux acc = function 
   | [] -> acc 
   | xs :: xss -> 
-    let acc = List.concat_map (fun x -> map_tailrec (fun ys -> x *. ys) acc) xs in 
+    let acc = concat_map (fun x -> map_tailrec (fun ys -> x *. ys) acc) xs in 
     cartesian_product_float_aux acc xss
 
 let cartesian_product_float lst = 

@@ -54,8 +54,7 @@ let div_flag_float_sub vars rcd eps p q2 u c order : float =
   let flag_float_num = simplify_expanded_expr (power_of_expanded_expr 
     (add_expanded_exprs k_u (const_expanded_expr (-. mu))) (int_of_float order)) in
   let flag_float = fst (expectation_of_expanded_expr flag_float_num vars rcd) /. (mu ** order) in 
-  if Float.is_nan flag_float then failwith "flag_float is NaN"
-  else if flag_float > 1. then 1. else flag_float
+  if flag_float > 1. then 1. else flag_float
 
 let div_flag_float vars_weight_list rcd eps p q2 u c order : float = 
   let sum = List.fold_left (fun acc (vars, weight) ->
