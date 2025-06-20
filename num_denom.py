@@ -67,4 +67,4 @@ den_str = printer.doprint(denom)
 
 # 5. Write the "no-exponent" string representations to the file
 with open("num_denom.txt", "w") as file:
-    file.write(f"{num_str}\n{den_str}\n")
+    file.write(num_str + "\n" + den_str + "\n")

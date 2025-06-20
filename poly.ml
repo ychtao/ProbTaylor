@@ -7,9 +7,8 @@ open Partition
 open Error2
 open Unix
 
-let u_nm vars eps pn c order : float = 
-  let rcd = Hashtbl.create 20 in 
-  let epn = fst (expectation_of_expanded_expr pn vars rcd) in 
+let u_nm vars eps pn c order rcd : float = 
+  let epn, rcd = expectation_of_expanded_expr pn vars rcd in 
   let u_nm = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
   u_nm
 
@@ -46,15 +45,16 @@ let rec cmb_bin_search vars_weight_list rcd eps p c order left right : float =
   else cmb_bin_search vars_weight_list rcd eps p c order left mid
 
 let naive_markov filename eps cfd order : float = 
-  (* let rcd = Hashtbl.create 20 in  *)
+  let rcd = Hashtbl.create 20 in 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
   let pn = power_of_expanded_expr p order in 
-  let u_nm = u_nm vars eps pn cfd order in u_nm
+  let u_nm = u_nm vars eps pn cfd order rcd in u_nm
 
 let naive_markov_opt filename eps cfd max_order : float * int = 
+  let rcd = Hashtbl.create 20 in 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
@@ -63,7 +63,7 @@ let naive_markov_opt filename eps cfd max_order : float * int =
     if current_order > max_order then (best_u, best_order)
     else try 
       let pn = power_of_expanded_expr p current_order in 
-      let current_u = u_nm vars eps pn cfd current_order in 
+      let current_u = u_nm vars eps pn cfd current_order rcd in 
       printf "Current iteration: u = %e, order = %d\n" current_u current_order; flush_all ();
       if current_u < best_u then find_best current_u current_order (current_order + 2)
       else find_best best_u best_order (current_order + 2)
@@ -72,16 +72,17 @@ let naive_markov_opt filename eps cfd max_order : float * int =
   let (best_u, best_order) = find_best infinity 0 2 in 
   (best_u, best_order)
 
-let central_moment_based filename eps cfd order num_intervals : float = 
+let central_moment_based filename eps cfd order num_intervals : float =
+  let rcd = Hashtbl.create 20 in  
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
   let u_init = cmb_u_init vars eps p cfd in 
   let pn = power_of_expanded_expr p order in 
-  let u_nm = u_nm vars eps pn cfd order in 
+  let u_nm = u_nm vars eps pn cfd order rcd in 
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
-  let u = cmb_bin_search vars_weight_list () eps p cfd order (u_init *. 1.01) (u_nm *. 1.01) in 
+  let u = cmb_bin_search vars_weight_list rcd eps p cfd order (u_init *. 1.01) (u_nm *. 1.01) in 
   u
 
 
@@ -212,4 +213,3 @@ let _ =
   let (tf, k) = tilde f in
   let r2 = error2 tf k  in 
   print_endline (string_of_expr r2) *)
-
