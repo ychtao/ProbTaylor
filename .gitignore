@@ -1,4 +1,4 @@
 *.txt
 temp.py
-unused/*
+unused-code/*
 *.out
