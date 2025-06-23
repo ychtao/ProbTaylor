@@ -7,6 +7,8 @@ open Partition
 open Error2
 open Unix
 
+let timeout = 180
+
 let u_nm vars eps pn c order rcd : float = 
   let epn, rcd = expectation_of_expanded_expr pn vars rcd in 
   let u_nm = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
@@ -109,9 +111,6 @@ let central_moment_based filename eps cfd order num_intervals : float =
   printf "%s\n" filename;
   printf "u: %e\n" u;
   printf "order = %d, num_intervals = %d\n" order num_intervals *)
-  
-
-
 
 
 (* let bound1_poly filename eps c order = 
@@ -164,8 +163,10 @@ let _ =
   let elapsed_time = Unix.gettimeofday () -. start_time in
   print_endline ("Elapsed time = " ^ (string_of_float elapsed_time) ^ " seconds") *)
 
+(* The following code was for handling second order error *)  
+(* Now moved to error2.ml and main.ml *)
 (* Suppose oc has already been open *)
-let print_ed_ranges oc vars k eps dlt = 
+(* let print_ed_ranges oc vars k eps dlt = 
   let rec loop_e k i = 
     if i > k then ()
     (* else (fprintf oc "e%d:(-%e, %e)\n" i eps eps; loop_e k (i + 1)) in *)
@@ -204,7 +205,7 @@ let _ =
   let oc = open_out "error2.txt" in
   print_ed_ranges oc vars k eps dlt;
   fprintf oc "%s\n" (string_of_expr error2);
-  close_out oc
+  close_out oc *)
 
 (* let _ = 
   let filename = "Example.txt" in 

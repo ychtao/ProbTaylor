@@ -39,4 +39,4 @@ all:
 # ocamlfind ocamlc -package owl -linkpkg -o b.out lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo expectation_num.cmo partition.cmo error2.cmo div.cmo
 
 clean:
-	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt pt
+	rm -f calc *.cmo *.cmi lexer.ml parser.ml parser.mli tilde.txt error2.txt pt
