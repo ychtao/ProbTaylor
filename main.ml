@@ -94,4 +94,5 @@ let _ =
     printf "1st-order error threshold = %e\n" best_u;
     printf "Optimal analysis order = %d\n" best_order
   );
+  flush_all ();
   bound_error2 filename eps dlt

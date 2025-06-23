@@ -63,12 +63,20 @@ let naive_markov_opt filename eps cfd max_order : float * int =
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
   let rec find_best best_u best_order current_order = 
     if current_order > max_order then (best_u, best_order)
-    else try 
+    else 
+      let timeout_handler = Sys.Signal_handle (fun _ -> raise Exit) in 
+      let old_handler = Sys.signal Sys.sigalrm timeout_handler in
+      ignore (Unix.alarm timeout);
+    try 
       let pn = power_of_expanded_expr p current_order in 
       let current_u = u_nm vars eps pn cfd current_order rcd in 
+      Unix.alarm 0;
+      Sys.set_signal Sys.sigalrm old_handler;
+      printf "Current order: %d, Current u: %e\n" current_order current_u; flush_all ();
       if current_u < best_u then find_best current_u current_order (current_order + 2)
       else find_best best_u best_order (current_order + 2)
     with 
+      | Exit -> Unix.alarm 0; Sys.set_signal Sys.sigalrm old_handler; (best_u, best_order)
       | _ -> failwith "error" in 
   let (best_u, best_order) = find_best infinity 0 2 in 
   (best_u, best_order)

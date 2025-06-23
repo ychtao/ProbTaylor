@@ -105,6 +105,7 @@ let bound_error2 filename eps dlt =
   fprintf oc "%s\n" (string_of_expr error2);
   close_out oc;
   printf "Calling Gelpia for 2nd order error:\n";
+  flush_all ();
   Sys.command ".././gelpia/bin/gelpia error2.txt" 
 
 

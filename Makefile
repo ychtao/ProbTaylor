@@ -18,7 +18,7 @@ all:
 	ocamlc -c poly.ml
 	ocamlc -c div.ml
 	ocamlc -c main.ml
-	ocamlc -o pt lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo partition.cmo error2.cmo poly.cmo div.cmo main.cmo
+	ocamlc -o pt -I +unix unix.cma lexer.cmo parser.cmo expr.cmo input_parser.cmo ops.cmo expectation.cmo partition.cmo error2.cmo poly.cmo div.cmo main.cmo
 
 # test: 
 # 	ocamlc -c expr.ml
