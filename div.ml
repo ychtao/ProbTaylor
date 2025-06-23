@@ -99,7 +99,6 @@ let rec div_bin_search vars_weight_list rcd eps p q2 c order left right : float 
   List.map hashtbl_of_list combinations *)
 
 let central_moment_based_div filename eps cfd order num_intervals : float =
-  printf "here\n";
   let rcd = Hashtbl.create 20 in 
   let order_float = float_of_int order in 
   let (vars, f) = process_input filename in 
