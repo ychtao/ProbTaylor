@@ -1,6 +1,7 @@
 open Printf
 open Poly
 open Div
+open Error2
 
 let get_eps () = 
   let default_eps = 2. ** (-24.) in 
@@ -11,6 +12,16 @@ let get_eps () =
   | _ :: tl -> parse tl
     | [] -> ()
   in parse argv; !eps
+
+let get_dlt () = 
+  let default_dlt = 2. ** (-126.) in 
+  let dlt = ref default_dlt in 
+  let argv = Array.to_list Sys.argv in 
+  let rec parse = function
+  | "--dlt" :: v :: _ -> (try dlt := float_of_string v with _ -> ()); ()
+  | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !dlt
 
 let get_cfd () = 
   let default_cfd = 0.99 in 
@@ -57,6 +68,7 @@ let get_div_flag () =
 let _ = 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
+  let dlt = get_dlt () in 
   let cfd = get_cfd () in 
   let order = get_order () in 
   let num_intervals = get_num_intervals () in 
@@ -81,5 +93,5 @@ let _ =
     printf "Naive Markov Opt, max order = %d\n" order;
     printf "1st-order error threshold = %e\n" best_u;
     printf "Optimal analysis order = %d\n" best_order
-  )
-  
+  );
+  bound_error2 filename eps dlt

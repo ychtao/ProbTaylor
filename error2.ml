@@ -1,5 +1,8 @@
 open Expr
 open Ops
+open Input_parser
+open Printf
+open Unix
 
 let rec diff_di (tf : expr) (i : int) : expr = 
   match tf with 
@@ -65,4 +68,43 @@ let error2 (tf : expr) (k : int) : expr =
   let sod = simplify (sum_of_di_diffs tf k) in
   let sodd = simplify (sum_of_yiyj_diffs tf k) in
   Add (sod, sodd)
+
+(* Suppose oc has been opened *)
+let print_ed_ranges oc vars k eps dlt = 
+  let rec loop_e k i = 
+    if i > k then ()
+    (* else (fprintf oc "e%d:(-%e, %e)\n" i eps eps; loop_e k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] e%d;\n" eps eps i; loop_e k (i + 1)) in
+  loop_e k 1;
+  let rec loop_d k i = 
+    if i > k then ()
+    (* else (fprintf oc "d%d:(-%e, %e)\n" i dlt dlt; loop_d k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] d%d;\n" dlt dlt i; loop_d k (i + 1)) in 
+  loop_d k 1;
+  let rec loop_p k i = 
+    if i > 2 * k then ()
+    (* else if i <= k then (fprintf oc "p%d:(-%e, %e)\n" i eps eps; loop_p k (i + 1)) *)
+    else if i <= k then (fprintf oc "[-%e, %e] p%d;\n" eps eps i; loop_p k (i + 1)) 
+    (* else (fprintf oc "p%d:(-%e, %e)\n" i dlt dlt; loop_p k (i + 1)) in *)
+    else (fprintf oc "[-%e, %e] p%d;\n" dlt dlt i; loop_p k (i + 1)) in 
+  loop_p k 1;
+  Hashtbl.iter (fun var distr -> 
+    match distr with 
+    | Uniform (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | Normal (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | Exponential (low, hi) -> fprintf oc "[%e, %e] %s;\n" low hi var
+    | _ -> failwith "Unsupported distribution!"
+  ) vars
+
+let bound_error2 filename eps dlt = 
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let error2 = error2 tf k in 
+  let oc = open_out "error2.txt" in 
+  print_ed_ranges oc vars k eps dlt;
+  fprintf oc "%s\n" (string_of_expr error2);
+  close_out oc;
+  printf "Calling Gelpia for 2nd order error:\n";
+  Sys.command ".././gelpia/bin/gelpia error2.txt" 
+
 

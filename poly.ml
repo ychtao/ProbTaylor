@@ -64,7 +64,6 @@ let naive_markov_opt filename eps cfd max_order : float * int =
     else try 
       let pn = power_of_expanded_expr p current_order in 
       let current_u = u_nm vars eps pn cfd current_order rcd in 
-      printf "Current iteration: u = %e, order = %d\n" current_u current_order; flush_all ();
       if current_u < best_u then find_best current_u current_order (current_order + 2)
       else find_best best_u best_order (current_order + 2)
     with 
