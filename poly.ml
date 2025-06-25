@@ -72,9 +72,10 @@ let naive_markov_opt filename eps cfd max_order : float * int =
       let current_u = u_nm vars eps pn cfd current_order rcd in 
       Unix.alarm 0;
       Sys.set_signal Sys.sigalrm old_handler;
-      printf "Current order: %d, Current u: %e\n" current_order current_u; flush_all ();
-      if current_u < best_u then find_best current_u current_order (current_order + 2)
-      else find_best best_u best_order (current_order + 2)
+      (* printf "Current order: %d, Current u: %e\n" current_order current_u; flush_all (); *)
+      let next_order = if current_order >= 12 then current_order + 6 else current_order + 2 in 
+      if current_u < best_u then find_best current_u current_order next_order
+      else find_best best_u best_order next_order
     with 
       | Exit -> Unix.alarm 0; Sys.set_signal Sys.sigalrm old_handler; (best_u, best_order)
       | _ -> failwith "error" in 
