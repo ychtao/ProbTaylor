@@ -38,10 +38,10 @@ let cmb_flag_float vars_weight_list rcd eps p u order : float =
   sum 
 
 let rec cmb_bin_search vars_weight_list rcd eps p c order left right : float = 
-  (* printf "Left: %e, Right: %e\n" left right; *)
+  printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
   let flag_float = cmb_flag_float vars_weight_list rcd eps p mid order in 
-  (* printf "Mid: %e, Flag Float: %e\n" mid flag_float; flush_all (); *)
+  printf "Mid: %e, Flag Float: %e\n" mid flag_float; flush_all ();
   if flag_float > 1. -. c then cmb_bin_search vars_weight_list rcd eps p c order mid right
   else if (right /. left) < 1.1 then mid 
   else cmb_bin_search vars_weight_list rcd eps p c order left mid
@@ -92,6 +92,7 @@ let central_moment_based filename eps cfd order num_intervals : float =
   let pn = power_of_expanded_expr p order in 
   let u_nm = u_nm vars eps pn cfd order rcd in 
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  if cmb_flag_float vars_weight_list rcd eps p u_nm order > 1. -. cfd then u_nm else 
   let u = cmb_bin_search vars_weight_list rcd eps p cfd order (u_init *. 1.01) (u_nm *. 1.01) in 
   u
 
