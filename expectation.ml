@@ -203,11 +203,11 @@ let wide_normal_expectation_of_two_rvs (rv1 : rv * int) (rv2 : rv * int) (low : 
 
 
 let standard_laplace_pdf (x : float) : float = 
-  let sigma = 1. in 
+  let sigma = 0.01 in 
   exp (-. (abs_float x) /. sigma) /. (2. *. sigma)
 
 let standard_laplace_cdf (x : float) : float = 
-  let sigma = 1. in
+  let sigma = 0.01 in
   if x < 0. then 0.5 *. exp (x /. sigma)
   else 1. -. 0.5 *. exp (-. x /. sigma)
 
@@ -217,7 +217,7 @@ let rec ick_integral (c : float) (k : int) : float =
 
 let laplace_nth_moment (n : int) (low : float) (high : float) : float =
   (* print_endline ("laplace_nth_moment" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
-  let sigma = 1. in 
+  let sigma = 0.01 in 
   let den = standard_laplace_cdf high -. standard_laplace_cdf low in
   (* let den_ = standard_laplace_cdf high -. standard_laplace_cdf low in *)
   (* let den = if den_ = 0. then (Float.succ 0.) else den_ in *)
@@ -236,7 +236,7 @@ let laplace_nth_moment (n : int) (low : float) (high : float) : float =
 
 let laplace_nth_moment_pos (n : int) (low : float) (high : float) : float = 
   (* print_endline ("laplace_nth_moment_pos" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
-  let sigma = 1. in 
+  let sigma = 0.01 in 
   let den = standard_laplace_cdf high -. standard_laplace_cdf low in
   if low >= 0. then laplace_nth_moment n low high 
   else if high <= 0. then 0.
@@ -245,7 +245,7 @@ let laplace_nth_moment_pos (n : int) (low : float) (high : float) : float =
 
 let laplace_nth_moment_neg (n : int) (low : float) (high : float) : float = 
   (* print_endline ("laplace_nth_moment_neg" ^ (string_of_int n) ^ (string_of_float low) ^ (string_of_float high)); *)
-  let sigma = 1. in 
+  let sigma = 0.01 in 
   let den = standard_laplace_cdf high -. standard_laplace_cdf low in
   if high <= 0. then (-. 1.) ** (float_of_int n) *. (laplace_nth_moment n low high)
   else if low >= 0. then 0.
