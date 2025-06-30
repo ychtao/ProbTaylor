@@ -7,7 +7,7 @@ open Partition
 open Error2
 open Unix
 
-let timeout = 180
+let timeout = 90
 
 let u_nm vars eps pn c order rcd : float = 
   let epn, rcd = expectation_of_expanded_expr pn vars rcd in 
@@ -53,7 +53,8 @@ let naive_markov filename eps cfd order : float =
   let sod = sum_of_expanded_exprs (List.map expand_and_simplify (list_of_ei_diffs tf k)) in
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
   let pn = power_of_expanded_expr p order in 
-  let u_nm = u_nm vars eps pn cfd order rcd in u_nm
+  let u_nm = u_nm vars eps pn cfd order rcd in 
+  u_nm
 
 let naive_markov_opt filename eps cfd max_order : float * int = 
   let rcd = Hashtbl.create 20 in 

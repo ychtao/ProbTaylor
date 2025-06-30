@@ -65,6 +65,9 @@ let get_nm_opt_flag () =
 let get_div_flag () = 
   Array.exists (fun arg -> arg = "--div") Sys.argv 
 
+let get_er1_flag () = 
+  Array.exists (fun arg -> arg = "--er1") Sys.argv
+
 let _ = 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
@@ -95,4 +98,4 @@ let _ =
     printf "Optimal analysis order = %d\n" best_order
   );
   flush_all ();
-  bound_error2 filename eps dlt
+  if not (get_er1_flag ()) then bound_error2 filename eps dlt else 0
