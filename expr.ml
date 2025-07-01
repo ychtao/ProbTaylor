@@ -4,6 +4,8 @@ type distr =
 | Exponential of float * float
 | Wide of float * float
 
+type vars = (string, distr) Hashtbl.t
+
 let low_of_distr (d : distr) : float = 
   match d with 
   | Uniform (low, _) -> low

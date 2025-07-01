@@ -101,4 +101,6 @@ let _ =
     printf "Optimal analysis order = %d\n" best_order
   );
   flush_all ();
-  if not (get_er1_flag ()) then bound_error2_gelpia filename eps dlt else 0
+  if not (get_er1_flag ()) then 
+    if (get_tri_flag ()) then bound_error2_tri filename eps dlt
+    else let _ = bound_error2_gelpia filename eps dlt in ()

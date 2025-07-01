@@ -66,7 +66,9 @@ let sum_of_yiyj_diffs (tf : expr) (k : int) : expr =
 
 let error2 (tf : expr) (k : int) : expr = 
   let sod = simplify (sum_of_di_diffs tf k) in
+  (* printf "sod computed\n"; flush_all (); *)
   let sodd = simplify (sum_of_yiyj_diffs tf k) in
+  (* printf "sodd computed\n"; flush_all (); *)
   Add (sod, sodd)
 
 (* Suppose oc has been opened *)
@@ -107,5 +109,55 @@ let bound_error2_gelpia filename eps dlt =
   printf "Calling Gelpia for 2nd order error:\n";
   flush_all ();
   Sys.command ".././gelpia/bin/gelpia error2.txt" 
+
+let get_rv_range (vars : vars) rv : float * float = 
+  let x = rv_to_name_no_sign rv in 
+  let d = try Hashtbl.find vars x 
+    with Not_found -> print_endline x; failwith "variable not found" in 
+  (low_of_distr d, high_of_distr d)
+
+let rv_upper_bound (vars : vars) (rv, n) : float = 
+  let (lo, hi) = get_rv_range vars rv in
+  let ret = (max (abs_float lo) (abs_float hi)) ** (float_of_int n) in 
+  ret 
+
+let term_upper_bound (vars : vars) (c, rvs) : float = 
+  let rv_bounds = map_tailrec (fun rv -> rv_upper_bound vars rv) rvs in 
+  let ret = (abs_float c) *. (List.fold_left ( *. ) 1. rv_bounds) in
+  (* printf "%s : %e\n" (string_of_term (c, rvs)) ret;  *)
+  ret
+
+let expanded_expr_upper_bound (vars : vars) (f : expanded_expr) : float = 
+  let term_bounds = map_tailrec (fun t -> term_upper_bound vars t) f in 
+  List.fold_left ( +. ) 0.0 term_bounds
+
+let add_ed_ranges_to_vars (vars : vars) (k : int) eps dlt : unit = 
+  let rec loop_e k i = 
+    if i > k then ()
+    else (Hashtbl.add vars ("e" ^ (string_of_int i)) (Uniform (-. eps, eps));
+    loop_e k (i + 1)) in 
+  loop_e k 1;
+  let rec loop_d k i = 
+    if i > k then () 
+    else (Hashtbl.add vars ("d" ^ (string_of_int i)) (Uniform (-. dlt, dlt));
+    loop_d k (i + 1)) in 
+  loop_d k 1;
+  let rec loop_p k i = 
+    if i > 2 * k then ()
+    else if i <= k then (Hashtbl.add vars ("p" ^ (string_of_int i)) (Uniform (-. eps, eps)); loop_p k (i + 1))
+    else (Hashtbl.add vars ("p" ^ (string_of_int i)) (Uniform (-. dlt, dlt));
+    loop_p k (i + 1))
+  in loop_p k 1
+    
+let bound_error2_tri filename eps dlt : unit = 
+  printf "Bounding second order error...\n"; flush_all ();
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let error2 = error2 tf k in 
+  let error2 = expand_expr error2 in 
+  printf "error2 expanded\n"; flush_all ();
+  (* let error2 = expand_and_simplify error2 in *)
+  add_ed_ranges_to_vars vars k eps dlt;
+  printf "Upper bound of error2: %e\n" (expanded_expr_upper_bound vars error2)
 
 
