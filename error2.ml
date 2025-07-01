@@ -96,7 +96,7 @@ let print_ed_ranges oc vars k eps dlt =
     | _ -> failwith "Unsupported distribution!"
   ) vars
 
-let bound_error2 filename eps dlt = 
+let bound_error2_gelpia filename eps dlt = 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let error2 = error2 tf k in 
