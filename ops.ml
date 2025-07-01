@@ -141,7 +141,7 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Mul (f1, f2) ->
     let terms1 = expand_expr f1 in
     let terms2 = expand_expr f2 in
-    flatten_tailrec (map_tailrec (fun (c1, vars1) ->
+    List.flatten (map_tailrec (fun (c1, vars1) ->
       map_tailrec (fun (c2, vars2) ->
         (c1 *. c2, tappend vars1 vars2)
       ) terms2

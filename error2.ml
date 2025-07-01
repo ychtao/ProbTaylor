@@ -146,6 +146,11 @@ let bound_error2_gelpia filename eps dlt =
   flush_all ();
   Sys.command ".././gelpia/bin/gelpia error2.txt" 
 
+let get_name_range (vars : vars) (x : string) : float * float = 
+  let d = try Hashtbl.find vars x 
+    with Not_found -> print_endline x; failwith "variable not found" in 
+  (low_of_distr d, high_of_distr d)
+
 let get_rv_range (vars : vars) rv : float * float = 
   let x = rv_to_name_no_sign rv in 
   let d = try Hashtbl.find vars x 
@@ -184,15 +189,44 @@ let add_ed_ranges_to_vars (vars : vars) (k : int) eps dlt : unit =
     else (Hashtbl.add vars ("p" ^ (string_of_int i)) (Uniform (-. dlt, dlt));
     loop_p k (i + 1))
   in loop_p k 1
+
+let rec bf_max_of_expr (vars : vars) (f : expr) eps dlt : float = 
+  match f with 
+  | Const c -> abs_float c
+  | Var x -> let (lo, hi) = get_name_range vars x in (max (abs_float lo) (abs_float hi))
+  | Add (f1, f2) -> 
+    let max1 = bf_max_of_expr vars f1 eps dlt in 
+    let max2 = bf_max_of_expr vars f2 eps dlt in 
+    max1 +. max2 
+  | Min (f1, f2) ->
+    let max1 = bf_max_of_expr vars f1 eps dlt in 
+    let max2 = bf_max_of_expr vars f2 eps dlt in 
+    max1 +. max2 
+  | Mul (f1, f2) ->
+    let max1 = bf_max_of_expr vars f1 eps dlt in 
+    let max2 = bf_max_of_expr vars f2 eps dlt in 
+    max1 *. max2 
+  | Div (f1, (Const c)) -> 
+    let max1 = bf_max_of_expr vars f1 eps dlt in 
+    abs_float (max1 *. c)
+  | Evar i -> eps
+  | Dvar i -> dlt 
+  | _ -> failwith "max_of_expr: not implemented"
+
     
 let bound_error2_tri filename eps dlt : unit = 
   printf "Bounding second order error...\n"; flush_all ();
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
-  let error2 = error2_expanded tf k in 
+  let error2 = error2 tf k in 
+  printf "%s\n" (string_of_expr error2); flush_all ();
+  add_ed_ranges_to_vars vars k eps dlt; 
+  printf "Upper bound of error2: %e\n" (bf_max_of_expr vars error2 eps dlt)
+
+  (* let error2 = error2_expanded tf k in 
   printf "error2 expanded\n"; flush_all ();
   (* let error2 = expand_and_simplify error2 in *)
   add_ed_ranges_to_vars vars k eps dlt;
-  printf "Upper bound of error2: %e\n" (expanded_expr_upper_bound vars error2)
+  printf "Upper bound of error2: %e\n" (expanded_expr_upper_bound vars error2) *)
 
 
