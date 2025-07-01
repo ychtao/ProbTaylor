@@ -19,6 +19,13 @@ let combine_tailrec lst1 lst2 =
   | _ -> failwith "combine failure"
 in aux [] lst1 lst2
 
+let flatten_tailrec (lstlst : 'a list list) : 'a list =
+  let rec aux acc = function
+    | [] -> List.rev acc
+    | l :: rest -> aux (List.rev_append l acc) rest
+  in
+  aux [] lstlst
+
 let rec tilde_aux (f : expr) (k0 : int) : expr * int =
   match f with
   | Const c -> (Const c, k0)
@@ -134,8 +141,8 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Mul (f1, f2) ->
     let terms1 = expand_expr f1 in
     let terms2 = expand_expr f2 in
-    List.flatten (List.map (fun (c1, vars1) ->
-      List.map (fun (c2, vars2) ->
+    flatten_tailrec (map_tailrec (fun (c1, vars1) ->
+      map_tailrec (fun (c2, vars2) ->
         (c1 *. c2, tappend vars1 vars2)
       ) terms2
     ) terms1)
@@ -149,6 +156,40 @@ let rec expand_expr (f : expr) : expanded_expr =
   | Evar i -> let x = "e" ^ (string_of_int i) in [(1.0, [(Rv x, 1)])]
   | Dvar i -> let x = "d" ^ (string_of_int i) in [(1.0, [(Rv x, 1)])]
   | _ -> printf "When expanding expr: %s\n" (string_of_expr f); failwith "Expand: Not supported"
+
+(* let rec expand_expr (f : expr) : expanded_expr = 
+  (* printf "%s\n" (string_of_expr f); *)
+  let tappend l1 l2 = List.rev_append (List.rev l1) l2 in 
+  match f with 
+  | Const 0. -> []
+  | Const c -> [(c, [])]
+  | Var x -> [(1.0, [(Rv x, 1)])]
+  | Add (f1, f2) -> 
+    let terms1 = expand_expr f1 in
+    let terms2 = expand_expr f2 in 
+    tappend terms1 terms2
+  | Min (f1, f2) -> 
+    let terms1 = expand_expr f1 in
+    let terms2 = (map_tailrec (fun (c, vars) -> (-.c, vars)) (expand_expr f2)) in
+    tappend terms1 terms2
+  | Mul (f1, f2) ->
+    let terms1 = expand_expr f1 in
+    let terms2 = expand_expr f2 in
+    flatten_tailrec (map_tailrec (fun (c1, vars1) ->
+      map_tailrec (fun (c2, vars2) ->
+        (c1 *. c2, tappend vars1 vars2)
+      ) terms2
+    ) terms1)
+  | Pvar x -> [(1.0, [(Prv x, 1)])]
+  | Nvar x -> [(1.0, [(Nrv x, 1)])]
+  | Exp (Var x, n) -> [(1.0, [(Rv x, n)])]
+  | Exp (Pvar x, n) -> [(1.0, [(Prv x, n)])]
+  | Exp (Nvar x, n) -> [(1.0, [(Nrv x, n)])]
+  | Div (f1, Const n2) -> expand_expr (Mul ((Const (1. /. n2)), f1))
+  (* Below added for handling second order error with triangular inequality *)
+  | Evar i -> let x = "e" ^ (string_of_int i) in [(1.0, [(Rv x, 1)])]
+  | Dvar i -> let x = "d" ^ (string_of_int i) in [(1.0, [(Rv x, 1)])]
+  | _ -> printf "When expanding expr: %s\n" (string_of_expr f); failwith "Expand: Not supported" *)
 
 (* let tappend (l1 : 'a list) (l2 : 'a list) : 'a list = 
   List.rev_append (List.rev l1) l2

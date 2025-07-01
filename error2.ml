@@ -21,6 +21,11 @@ let rec sum_of_di_diffs (tf : expr) (k : int) : expr =
   else let cur = simplify (Mul (set_err_to_zero (diff_di tf k), Dvar k)) in
   Add (cur, sum_of_di_diffs tf (k - 1))
 
+let rec sum_of_di_diffs_expanded (tf : expr) (k : int) : expanded_expr = 
+  if k = 0 then []
+  else let cur = expand_and_simplify (simplify (Mul (set_err_to_zero (diff_di tf k), Dvar k))) in 
+  List.rev_append cur (sum_of_di_diffs_expanded tf (k - 1))
+
 (* let rec sum_of_di_diffs_aux (tf : expr) (i : int) (k : int) : expr = 
   if i = 0 then Const 0.
   else let cur = simplify (Mul (set_err_to_zero (diff_di tf k), Dvar (i))) in
@@ -64,12 +69,43 @@ let sum_of_yiyj_diffs (tf : expr) (k : int) : expr =
   let diag_terms = loop2 1 (Const 0.) in
   Add (cross_terms, Mul (Const 0.5, diag_terms))
 
+let half_term (c, rvs) : term = 
+  (c *. 0.5, rvs)
+
+let cross_terms_expanded (tf : expr) (k : int) : expanded_expr = 
+  let rec aux i j acc = 
+    if i > 2 * k then acc 
+    else if j > 2 * k then aux (i + 1) (i + 2) acc 
+    else let cur_coef = replace_error_with_ps (diff_yiyj tf i j k) k in 
+    let yi = yi_to_error i k in
+    let yj = yi_to_error j k in
+    let cur = expand_and_simplify (simplify (Mul (yi, (Mul (yj, cur_coef))))) in 
+    aux i (j + 1) (List.rev_append acc cur) in 
+  aux 1 2 []
+
+let diag_terms_expanded (tf : expr) (k : int) : expanded_expr =
+  let rec aux i acc = 
+    if i > 2 * k then acc 
+    else let cur_coef = replace_error_with_ps (diff_yiyj tf i i k) k in 
+    let yi = yi_to_error i k in 
+    let cur = expand_and_simplify (Mul (yi, Mul (yi, cur_coef))) in 
+    aux (i + 1) (List.rev_append acc cur) in 
+  map_tailrec half_term (aux 1 [])
+
+let sum_of_yiyj_diffs_expanded (tf : expr) (k : int) : expanded_expr = 
+  let cterms = cross_terms_expanded tf k in 
+  let dterms = cross_terms_expanded tf k in 
+  List.rev_append cterms dterms
+
 let error2 (tf : expr) (k : int) : expr = 
   let sod = simplify (sum_of_di_diffs tf k) in
-  (* printf "sod computed\n"; flush_all (); *)
   let sodd = simplify (sum_of_yiyj_diffs tf k) in
-  (* printf "sodd computed\n"; flush_all (); *)
   Add (sod, sodd)
+
+let error2_expanded (tf : expr) (k : int) : expanded_expr = 
+  let sod = sum_of_di_diffs_expanded tf k in 
+  let sodd = sum_of_yiyj_diffs_expanded tf k in 
+  List.rev_append sod sodd
 
 (* Suppose oc has been opened *)
 let print_ed_ranges oc vars k eps dlt = 
@@ -153,8 +189,7 @@ let bound_error2_tri filename eps dlt : unit =
   printf "Bounding second order error...\n"; flush_all ();
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
-  let error2 = error2 tf k in 
-  let error2 = expand_expr error2 in 
+  let error2 = error2_expanded tf k in 
   printf "error2 expanded\n"; flush_all ();
   (* let error2 = expand_and_simplify error2 in *)
   add_ed_ranges_to_vars vars k eps dlt;
