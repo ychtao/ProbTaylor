@@ -219,9 +219,10 @@ let bound_error2_tri filename eps dlt : unit =
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
   let error2 = error2 tf k in 
-  printf "%s\n" (string_of_expr error2); flush_all ();
+  (* printf "%s\n" (string_of_expr error2); flush_all (); *)
   add_ed_ranges_to_vars vars k eps dlt; 
-  printf "Upper bound of error2: %e\n" (bf_max_of_expr vars error2 eps dlt)
+  printf "Upper bound of error2: %e\n" (bf_max_of_expr vars error2 eps dlt); 
+  flush_all()
 
   (* let error2 = error2_expanded tf k in 
   printf "error2 expanded\n"; flush_all ();

@@ -72,6 +72,7 @@ let get_tri_flag () =
   Array.exists (fun arg -> arg = "--tri") Sys.argv
 
 let _ = 
+  let start_time = Unix.gettimeofday () in 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
   let dlt = get_dlt () in 
@@ -101,6 +102,11 @@ let _ =
     printf "Optimal analysis order = %d\n" best_order
   );
   flush_all ();
+  let end_error1_time = Unix.gettimeofday () in 
+  printf "First-order analysis time: %.2fs\n" (end_error1_time -. start_time);
   if not (get_er1_flag ()) then 
-    if (get_tri_flag ()) then bound_error2_tri filename eps dlt
-    else let _ = bound_error2_gelpia filename eps dlt in ()
+    ((if (get_tri_flag ()) then bound_error2_tri filename eps dlt
+    else let _ = bound_error2_gelpia filename eps dlt in ());
+    let end_error2_time = Unix.gettimeofday () in 
+    printf "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
+    flush_all ())
