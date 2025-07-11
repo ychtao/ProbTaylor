@@ -1,3 +1,7 @@
+This is to be run on Ubutnu 18.04 with OCaml 4.07.
+
+To compile ProbTaylor: `make`
+
 To run ProbTaylor: `./pt <file_name_of_benchmark> <options>`
 
 Available options:
@@ -9,4 +13,4 @@ Available options:
 + `--num <b>`: run with range partition, number of partitions = `b`
 + `--er1`: analyze first-order error threshold only
 
-Analyzing second-order error requires installation of GELPIA.
+Analyzing second-order error requires installation of [GELPIA](https://github.com/rospoly/gelpia.git).
