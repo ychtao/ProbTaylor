@@ -1,4 +1,4 @@
-This is to be run on Ubutnu 18.04 with OCaml 4.07.
+This is to be run on Ubuntu 18.04 with OCaml 4.07.
 
 To compile ProbTaylor: `make`
 
