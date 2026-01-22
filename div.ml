@@ -66,10 +66,8 @@ let div_flag_float vars_weight_list rcd eps p q2 u c order : float =
 
 (* Order must be even *)
 let rec div_bin_search vars_weight_list rcd eps p q2 c order left right : float =
-  printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
   let flag_float = div_flag_float vars_weight_list rcd eps p q2 mid c order in
-  printf "Mid: %e, Flag Float: %f\n\n" mid flag_float; flush_all ();
   if flag_float > 1. -. c then div_bin_search vars_weight_list rcd eps p q2 c order mid right 
   else if (right /. left) < 1.2 then mid 
   else div_bin_search vars_weight_list rcd eps p q2 c order left mid

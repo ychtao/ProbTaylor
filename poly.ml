@@ -38,10 +38,8 @@ let cmb_flag_float vars_weight_list rcd eps p u order : float =
   sum 
 
 let rec cmb_bin_search vars_weight_list rcd eps p c order left right : float = 
-  printf "Left: %e, Right: %e\n" left right;
   let mid = (left *. right) ** 0.5 in 
   let flag_float = cmb_flag_float vars_weight_list rcd eps p mid order in 
-  printf "Mid: %e, Flag Float: %e\n" mid flag_float; flush_all ();
   if flag_float > 1. -. c then cmb_bin_search vars_weight_list rcd eps p c order mid right
   else if (right /. left) < 1.1 then mid 
   else cmb_bin_search vars_weight_list rcd eps p c order left mid
