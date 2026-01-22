@@ -211,6 +211,10 @@ let rec bf_max_of_expr (vars : vars) (f : expr) eps dlt : float =
     abs_float (max1 *. c)
   | Evar i -> eps
   | Dvar i -> dlt 
+  | Div (f1, f2) -> 
+    let max1 = bf_max_of_expr vars f1 eps dlt in 
+    let max2 = bf_max_of_expr vars f2 eps dlt in 
+    max1 /. max2
   | _ -> failwith "max_of_expr: not implemented"
 
     
