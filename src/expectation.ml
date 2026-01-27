@@ -1,7 +1,7 @@
 open Expr
 open Printf
 
-let laplace_sigma = 1.
+let laplace_sigma = 0.01
 
 (* A record of the already calculated expectations *)
 type rcd = ((rv * int * float * float), float) Hashtbl.t
