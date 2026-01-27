@@ -18,4 +18,5 @@ clean:
 	$(MAKE) -C src clean
 	rm -rf $(BIN_DIR)
 	rm -rf $(RES_DIR)
+	rm benchmarks/scalability/*.txt
 	

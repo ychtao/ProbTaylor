@@ -3,7 +3,7 @@ import sys
 N = int(sys.argv[1])
 lb = 0
 ub = 1
-filename = sys.argv[1] + ".txt"
+filename = "./benchmarks/scalability/" + sys.argv[1] + ".txt"
 
 f = open(filename, "w")
 

@@ -7,7 +7,6 @@ set -euo pipefail
 # Minimal script that runs a fixed list of experiments.
 # Run from the repository root as: ./scripts/polynm.sh
 
-# mkdir -p ./results/poly_u
 
 ./bin/pt ./benchmarks/poly_u/bsplines0.txt -o ./results/poly_u/bsplines0.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_u/bsplines1.txt -o ./results/poly_u/bsplines1.out --nmopt --order 36 --er1

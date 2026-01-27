@@ -136,6 +136,8 @@ let _ =
       Printf.fprintf oc "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
       flush oc
     );
+    if (get_er1_flag ()) then
+      Printf.fprintf oc "Note: Second-order error analysis skipped as per --er1 flag.\n";
     close_out oc
   with e ->
     close_out_noerr oc;
