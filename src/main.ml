@@ -81,9 +81,67 @@ let get_output_filename () =
     | [] -> ()
   in parse argv; !out
 
-let _ = 
-  let out_file = get_output_filename () in
-  printf "Output file: %s\n" out_file;
+
+let _ =
+  let start_time = Unix.gettimeofday () in
+  let filename = Sys.argv.(1) in
+  let outname = get_output_filename () in
+
+  let ensure_parent_dir path =
+    let dir = Filename.dirname path in
+    let rec aux d =
+      if d = "" || d = "." then ()
+      else if Sys.file_exists d then
+        if Sys.is_directory d then () else failwith (d ^ " exists but is not a directory")
+      else (aux (Filename.dirname d); Unix.mkdir d 0o755)
+    in aux dir
+  in
+  ensure_parent_dir outname;
+  let oc = open_out outname in
+  try
+    let eps = get_eps () in
+    let dlt = get_dlt () in
+    let cfd = get_cfd () in
+    let order = get_order () in
+    let num_intervals = get_num_intervals () in
+    if get_nm_flag () then (
+      let u = naive_markov filename eps cfd order in
+      Printf.fprintf oc "%s\n" filename;
+      Printf.fprintf oc "Naive Markov, order = %d\n" order;
+      Printf.fprintf oc "1st-order error threshold = %e\n" u
+    ) else if get_cmb_flag () then (
+      let u = central_moment_based filename eps cfd order num_intervals in
+      Printf.fprintf oc "%s\n" filename;
+      Printf.fprintf oc "Central moment based, order = %d, num = %d\n" order num_intervals;
+      Printf.fprintf oc "1st-order error threshold = %e\n" u
+    ) else if get_div_flag () then (
+      let u = central_moment_based_div filename eps cfd order num_intervals in
+      Printf.fprintf oc "%s\n" filename;
+      Printf.fprintf oc "Central moment based (fractional expression), order = %d, num = %d\n" order num_intervals;
+      Printf.fprintf oc "1st-order error threshold = %e\n" u
+    ) else (
+      let (best_u, best_order) = naive_markov_opt filename eps cfd order in
+      Printf.fprintf oc "%s\n" filename;
+      Printf.fprintf oc "Naive Markov Opt, max order = %d\n" order;
+      Printf.fprintf oc "1st-order error threshold = %e\n" best_u;
+      Printf.fprintf oc "Optimal analysis order = %d\n" best_order
+    );
+    flush oc;
+    let end_error1_time = Unix.gettimeofday () in
+    Printf.fprintf oc "First-order analysis time: %.2fs\n" (end_error1_time -. start_time);
+    if not (get_er1_flag ()) then (
+      (if (get_tri_flag ()) then bound_error2_tri filename eps dlt
+       else let _ = bound_error2_gelpia filename eps dlt in ());
+      let end_error2_time = Unix.gettimeofday () in
+      Printf.fprintf oc "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
+      flush oc
+    );
+    close_out oc
+  with e ->
+    close_out_noerr oc;
+    raise e
+
+(* let _ = 
   let start_time = Unix.gettimeofday () in 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
@@ -121,4 +179,4 @@ let _ =
     else let _ = bound_error2_gelpia filename eps dlt in ());
     let end_error2_time = Unix.gettimeofday () in 
     printf "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
-    flush_all ())
+    flush_all ()) *)
