@@ -71,7 +71,19 @@ let get_er1_flag () =
 let get_tri_flag () = 
   Array.exists (fun arg -> arg = "--tri") Sys.argv
 
+let get_output_filename () =
+  let default_out = "./results/" ^ Sys.argv.(1) ^ ".out" in 
+  let out = ref default_out in
+  let argv = Array.to_list Sys.argv in
+  let rec parse = function
+    | "-o" :: v :: _ -> (out := v; ())
+    | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !out
+
 let _ = 
+  let out_file = get_output_filename () in
+  printf "Output file: %s\n" out_file;
   let start_time = Unix.gettimeofday () in 
   let filename = Sys.argv.(1) in
   let eps = get_eps () in 
