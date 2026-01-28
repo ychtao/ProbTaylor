@@ -1,7 +1,17 @@
 open Expr
 open Printf
 
-let laplace_sigma = 0.01
+let get_sigma () = 
+  let default_sigma = 0.01 in
+  let sigma = ref default_sigma in
+  let argv = Array.to_list Sys.argv in
+  let rec parse = function
+    | "--sigma" :: v :: _ -> (try sigma := float_of_string v with _ -> ()); ()
+    | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !sigma
+
+let laplace_sigma = get_sigma ()
 
 (* A record of the already calculated expectations *)
 type rcd = ((rv * int * float * float), float) Hashtbl.t
