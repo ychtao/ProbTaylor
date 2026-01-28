@@ -1,28 +1,3 @@
-# import sympy as sp
-
-# with open("e.txt", "r") as file:
-#   lines = file.readlines()
-  
-# vars = []
-# line_flag = False
-# for line in lines:
-#   line = line.strip()
-#   if line == "":
-#     line_flag = True 
-#     continue 
-#   if line_flag:
-#     e_str = line
-#   else:
-#     vars.append(line)
-    
-# symbols = {var : sp.symbols(var) for var in vars}
-# e = sp.sympify(e_str, locals = symbols)
-# num, denom = sp.fraction(e)
-# num_exp = sp.expand_power_base(num, force = True)
-# denom_exp = sp.expand_power_base(denom, force = True) 
-# with open("num_denom.txt", "w") as file:
-#   file.write(f"{num_exp}\n{denom_exp}\n")
-
 import sympy as sp
 from sympy.printing.str import StrPrinter
 

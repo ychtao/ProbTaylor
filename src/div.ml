@@ -14,7 +14,7 @@ let get_num_denom vars e =
   fprintf oc "\n";
   fprintf oc "%s\n" (string_of_expr e);
   close_out oc;
-  let _ = Sys.command "python3 num_denom.py" in 
+  let _ = Sys.command "python3 ./src/num_denom.py" in 
   let ic = open_in "num_denom.txt" in
   let num = expr_parser (input_line ic) in
   let denom = expr_parser (input_line ic) in

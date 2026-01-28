@@ -72,7 +72,7 @@ let get_tri_flag () =
   Array.exists (fun arg -> arg = "--tri") Sys.argv
 
 let get_output_filename () =
-  let default_out = "./results/" ^ Sys.argv.(1) ^ ".out" in 
+  let default_out = Sys.argv.(1) ^ ".out" in 
   let out = ref default_out in
   let argv = Array.to_list Sys.argv in
   let rec parse = function
