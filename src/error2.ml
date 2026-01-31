@@ -3,6 +3,17 @@ open Ops
 open Input_parser
 open Printf
 open Unix
+(* open String *)
+
+let get_output_filename () =
+  let default_out = Sys.argv.(1) ^ ".out" in 
+  let out = ref default_out in
+  let argv = Array.to_list Sys.argv in
+  let rec parse = function
+    | "-o" :: v :: _ -> (out := v; ())
+    | _ :: tl -> parse tl
+    | [] -> ()
+  in parse argv; !out
 
 let rec diff_di (tf : expr) (i : int) : expr = 
   match tf with 
@@ -134,6 +145,23 @@ let print_ed_ranges oc vars k eps dlt =
     | _ -> failwith "Unsupported distribution!"
   ) vars
 
+let start_with ~prefix s = 
+  let lp = String.length prefix in 
+  String.length s >= lp && String.sub s 0 lp = prefix
+
+let parse_gelpia_error2 filename =
+  let ic = open_in filename in 
+  let prefix = "Maximum upper bound" in
+  let rec loop () =
+    match input_line ic with 
+    | line -> if start_with ~prefix line then (
+      let value_str = String.sub line (String.length prefix) (String.length line - String.length prefix) |> String.trim 
+      in close_in ic; float_of_string value_str)
+      else loop ()
+    | exception End_of_file -> 
+      close_in ic; failwith "Gelpia failure"
+    in loop()
+
 let bound_error2_gelpia filename eps dlt = 
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
@@ -142,9 +170,9 @@ let bound_error2_gelpia filename eps dlt =
   print_ed_ranges oc vars k eps dlt;
   fprintf oc "%s\n" (string_of_expr error2);
   close_out oc;
-  printf "Calling Gelpia for 2nd order error:\n";
-  flush_all ();
-  Sys.command ".././gelpia/bin/gelpia error2.txt" 
+  let oc2 = open_out "error2_out.txt" in 
+  let _ = Sys.command ".././gelpia/bin/gelpia error2.txt >> error2.out" in 
+  parse_gelpia_error2 "error2.out"
 
 let get_name_range (vars : vars) (x : string) : float * float = 
   let d = try Hashtbl.find vars x 

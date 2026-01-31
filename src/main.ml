@@ -130,8 +130,9 @@ let _ =
     let end_error1_time = Unix.gettimeofday () in
     Printf.fprintf oc "First-order analysis time: %.2fs\n" (end_error1_time -. start_time);
     if not (get_er1_flag ()) then (
-      (if (get_tri_flag ()) then bound_error2_tri filename eps dlt
-       else let _ = bound_error2_gelpia filename eps dlt in ());
+      if (get_tri_flag ()) then bound_error2_tri filename eps dlt
+       else (let err2_bound = bound_error2_gelpia filename eps dlt in 
+       Printf.fprintf oc "2nd-order error threshold = %e\n" err2_bound);
       let end_error2_time = Unix.gettimeofday () in
       Printf.fprintf oc "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
       flush oc
