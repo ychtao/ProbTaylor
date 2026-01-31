@@ -62,13 +62,40 @@ set -euo pipefail
 ./bin/pt ./benchmarks/poly_n/ksin.txt -o ./results/poly_n_nm/ksin.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_n/kcos.txt -o ./results/poly_n_nm/kcos.out --nmopt --order 36 --er1
 
+./bin/pt ./benchmarks/poly_e/bsplines0.txt -o ./results/poly_ewide_nm/bsplines0.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/bsplines1.txt -o ./results/poly_ewide_nm/bsplines1.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/bsplines2.txt -o ./results/poly_ewide_nm/bsplines2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/bsplines3.txt -o ./results/poly_ewide_nm/bsplines3.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/ClassIDs0.txt -o ./results/poly_ewide_nm/ClassIDs0.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/ClassIDs1.txt -o ./results/poly_ewide_nm/ClassIDs1.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/ClassIDs2.txt -o ./results/poly_ewide_nm/ClassIDs2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Filters1.txt -o ./results/poly_ewide_nm/Filters1.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Filters2.txt -o ./results/poly_ewide_nm/Filters2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Filters3.txt -o ./results/poly_ewide_nm/Filters3.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Filters4.txt -o ./results/poly_ewide_nm/Filters4.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/RigidBody1.txt -o ./results/poly_ewide_nm/RigidBody1.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/RigidBody2.txt -o ./results/poly_ewide_nm/RigidBody2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Sine.txt -o ./results/poly_ewide_nm/Sine.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/SolveCubic.txt -o ./results/poly_ewide_nm/SolveCubic.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Sqrt.txt -o ./results/poly_ewide_nm/Sqrt.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Traincars1.txt -o ./results/poly_ewide_nm/Traincars1.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Traincars2.txt -o ./results/poly_ewide_nm/Traincars2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Traincars3.txt -o ./results/poly_ewide_nm/Traincars3.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Traincars4.txt -o ./results/poly_ewide_nm/Traincars4.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Trid.txt -o ./results/poly_ewide_nm/Trid.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Trid2.txt -o ./results/poly_ewide_nm/Trid2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Trid3.txt -o ./results/poly_ewide_nm/Trid3.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/Trid4.txt -o ./results/poly_ewide_nm/Trid4.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/ksin.txt -o ./results/poly_ewide_nm/ksin.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/kcos.txt -o ./results/poly_ewide_nm/kcos.out --nmopt --order 36 --er1 --sigma 1
+
 ./bin/pt ./benchmarks/poly_e/bsplines0.txt -o ./results/poly_e_nm/bsplines0.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/bsplines1.txt -o ./results/poly_e_nm/bsplines1.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/bsplines2.txt -o ./results/poly_e_nm/bsplines2.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/bsplines3.txt -o ./results/poly_e_nm/bsplines3.out --nmopt --order 36 --er1
-./bin/pt ./benchmarks/poly_e/ClassIDs0.txt -o ./results/poly_e_nm/ClassIDs0.out --nmopt --order 36 --er1 --sigma 1
-./bin/pt ./benchmarks/poly_e/ClassIDs1.txt -o ./results/poly_e_nm/ClassIDs1.out --nmopt --order 36 --er1 --sigma 1
-./bin/pt ./benchmarks/poly_e/ClassIDs2.txt -o ./results/poly_e_nm/ClassIDs2.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/ClassIDs0.txt -o ./results/poly_e_nm/ClassIDs0.out --nmopt --order 36 --er1
+./bin/pt ./benchmarks/poly_e/ClassIDs1.txt -o ./results/poly_e_nm/ClassIDs1.out --nmopt --order 36 --er1
+./bin/pt ./benchmarks/poly_e/ClassIDs2.txt -o ./results/poly_e_nm/ClassIDs2.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Filters1.txt -o ./results/poly_e_nm/Filters1.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Filters2.txt -o ./results/poly_e_nm/Filters2.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Filters3.txt -o ./results/poly_e_nm/Filters3.out --nmopt --order 36 --er1
@@ -76,7 +103,7 @@ set -euo pipefail
 ./bin/pt ./benchmarks/poly_e/RigidBody1.txt -o ./results/poly_e_nm/RigidBody1.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/RigidBody2.txt -o ./results/poly_e_nm/RigidBody2.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Sine.txt -o ./results/poly_e_nm/Sine.out --nmopt --order 36 --er1
-./bin/pt ./benchmarks/poly_e/SolveCubic.txt -o ./results/poly_e_nm/SolveCubic.out --nmopt --order 36 --er1 --sigma 1
+./bin/pt ./benchmarks/poly_e/SolveCubic.txt -o ./results/poly_e_nm/SolveCubic.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Sqrt.txt -o ./results/poly_e_nm/Sqrt.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Traincars1.txt -o ./results/poly_e_nm/Traincars1.out --nmopt --order 36 --er1
 ./bin/pt ./benchmarks/poly_e/Traincars2.txt -o ./results/poly_e_nm/Traincars2.out --nmopt --order 36 --er1
