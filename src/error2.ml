@@ -170,8 +170,8 @@ let bound_error2_gelpia filename eps dlt =
   print_ed_ranges oc vars k eps dlt;
   fprintf oc "%s\n" (string_of_expr error2);
   close_out oc;
-  let oc2 = open_out "error2_out.txt" in 
-  let _ = Sys.command ".././gelpia/bin/gelpia error2.txt >> error2.out" in 
+  (* let oc2 = open_out "error2_out.txt" in  *)
+  let _ = Sys.command ".././gelpia/bin/gelpia error2.txt > error2.out" in 
   parse_gelpia_error2 "error2.out"
 
 let get_name_range (vars : vars) (x : string) : float * float = 
@@ -245,8 +245,14 @@ let rec bf_max_of_expr (vars : vars) (f : expr) eps dlt : float =
     max1 /. max2
   | _ -> failwith "max_of_expr: not implemented"
 
-    
-let bound_error2_tri filename eps dlt : unit = 
+let bound_error2_tri filename eps dlt : float =
+  let (vars, f) = process_input filename in 
+  let (tf, k) = tilde f in 
+  let error2 = error2 tf k in 
+  add_ed_ranges_to_vars vars k eps dlt;
+  bf_max_of_expr vars error2 eps dlt  
+
+(* let bound_error2_tri filename eps dlt : unit = 
   printf "Bounding second order error...\n"; flush_all ();
   let (vars, f) = process_input filename in 
   let (tf, k) = tilde f in 
@@ -254,7 +260,7 @@ let bound_error2_tri filename eps dlt : unit =
   (* printf "%s\n" (string_of_expr error2); flush_all (); *)
   add_ed_ranges_to_vars vars k eps dlt; 
   printf "Upper bound of error2: %e\n" (bf_max_of_expr vars error2 eps dlt); 
-  flush_all()
+  flush_all() *)
 
   (* let error2 = error2_expanded tf k in 
   printf "error2 expanded\n"; flush_all ();

@@ -87,6 +87,9 @@ let _ =
   let filename = Sys.argv.(1) in
   let outname = get_output_filename () in
 
+  Printf.printf "Analyzing program: %s...\n" filename;
+  flush_all ();
+
   let ensure_parent_dir path =
     let dir = Filename.dirname path in
     let rec aux d =
@@ -129,17 +132,20 @@ let _ =
     flush oc;
     let end_error1_time = Unix.gettimeofday () in
     Printf.fprintf oc "First-order analysis time: %.2fs\n" (end_error1_time -. start_time);
-    if not (get_er1_flag ()) then (
-      if (get_tri_flag ()) then bound_error2_tri filename eps dlt
-       else (let err2_bound = bound_error2_gelpia filename eps dlt in 
-       Printf.fprintf oc "2nd-order error threshold = %e\n" err2_bound);
-      let end_error2_time = Unix.gettimeofday () in
-      Printf.fprintf oc "Second-order analysis time: %.2fs\n" (end_error2_time -. end_error1_time);
+
+    if (get_er1_flag ()) 
+      then (Printf.fprintf oc "Note: Second-order error analysis skipped as per --er1 flag.\n")
+    else (
+      let err2_bound = (if (get_tri_flag()) then (bound_error2_tri filename eps dlt) 
+        else (bound_error2_gelpia filename eps dlt)) in 
+      Printf.fprintf oc "Second-order error threshold = %e\n" err2_bound;
+      let end_error2_time = Unix.gettimeofday () in 
+      Printf.fprintf oc "Second-order analysis time: %2fs\n " (end_error2_time -. end_error1_time);
       flush oc
     );
-    if (get_er1_flag ()) then
-      Printf.fprintf oc "Note: Second-order error analysis skipped as per --er1 flag.\n";
-    close_out oc
+    close_out oc;
+
+    Printf.printf "Analysis done!\n"
   with e ->
     close_out_noerr oc;
     raise e
