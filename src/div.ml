@@ -8,6 +8,9 @@ open Partition
 open Error2
 open Unix
 
+let get_verbose () = 
+  Array.exists (fun arg -> arg = "--verbose") Sys.argv
+
 let get_num_denom vars e = 
   let oc = open_out "e.txt" in 
   Hashtbl.iter (fun key _ -> fprintf oc "%s\n" key) vars;
@@ -67,7 +70,9 @@ let div_flag_float vars_weight_list rcd eps p q2 u c order : float =
 (* Order must be even *)
 let rec div_bin_search vars_weight_list rcd eps p q2 c order left right : float =
   let mid = (left *. right) ** 0.5 in 
+  (if get_verbose () then Printf.printf "left: %e; right: %e; mid: %e\n" left right mid; flush_all());
   let flag_float = div_flag_float vars_weight_list rcd eps p q2 mid c order in
+  (if get_verbose () then Printf.printf "flag float: %e\n" flag_float; flush_all());
   if flag_float > 1. -. c then div_bin_search vars_weight_list rcd eps p q2 c order mid right 
   else if (right /. left) < 1.2 then mid 
   else div_bin_search vars_weight_list rcd eps p q2 c order left mid
@@ -102,12 +107,15 @@ let central_moment_based_div filename eps cfd order num_intervals : float =
   let (tf, k) = tilde f in 
   let lod = list_of_ei_diffs tf k in 
   let (f_num, f_denom) = get_num_denom_single vars f in 
-  let hiqs = get_hiqs vars lod f_denom in 
+  let hiqs = get_hiqs vars lod f_denom in
   let sod = sum_of_expanded_exprs hiqs in 
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in
   let q2 = power_of_expanded_expr (expand_and_simplify f_denom) 2 in
   let u_init = u_init vars eps p q2 in 
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
+  (* Printf.printf "p : %s\n" (string_of_expanded_expr p); 
+  Printf.printf "q2 : %s\n" (string_of_expanded_expr q2);
+  Printf.printf "u_init: %e\n" u_init; flush_all (); *)
   let u = div_bin_search vars_weight_list rcd eps p q2 cfd order_float (u_init *. 1.01) (u_init *. 20000.) in 
   u
 
