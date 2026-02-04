@@ -1,0 +1,7 @@
+./benchmarks/poly_u/ClassIDs0.txt
+Central moment based, order = 4, num = 1
+1st-order error threshold = 1.460362e-05
+First-order analysis time: 0.12s
+Second-order error threshold = 1.305462e-12
+Second-order analysis time: 1.142726s
+ 

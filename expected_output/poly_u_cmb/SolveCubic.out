@@ -1,0 +1,7 @@
+./benchmarks/poly_u/SolveCubic.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 1.976480e-05
+First-order analysis time: 41.91s
+Second-order error threshold = 2.645785e-12
+Second-order analysis time: 1.585422s
+ 

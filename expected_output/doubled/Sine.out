@@ -1,0 +1,8 @@
+./benchmarks/doubled/Sine.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 2.715681e-06
+Optimal analysis order = 6
+First-order analysis time: 1.59s
+Second-order error threshold = 5.587474e-13
+Second-order analysis time: 2.022481s
+ 

@@ -1,0 +1,7 @@
+./benchmarks/div_n/nonlin1.txt
+Central moment based (fractional expression), order = 2, num = 16
+1st-order error threshold = 6.019287e-08
+First-order analysis time: 2.25s
+Second-order error threshold = 3.552714e-14
+Second-order analysis time: 0.225865s
+ 

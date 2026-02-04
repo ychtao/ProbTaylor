@@ -1,0 +1,7 @@
+./benchmarks/poly_e/Sqrt.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 2.511926e-07
+First-order analysis time: 0.10s
+Second-order error threshold = 1.664713e-11
+Second-order analysis time: 0.691752s
+ 

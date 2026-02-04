@@ -1,0 +1,8 @@
+./benchmarks/poly_e/Sine.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 1.155499e-08
+Optimal analysis order = 6
+First-order analysis time: 2.07s
+Second-order error threshold = 5.757697e-14
+Second-order analysis time: 2.769274s
+ 

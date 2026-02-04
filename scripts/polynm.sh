@@ -116,4 +116,3 @@
 ./bin/pt ./benchmarks/poly_e/ksin.txt -o ./results/poly_e_nm/ksin.out --nmopt --order 36 --tri
 ./bin/pt ./benchmarks/poly_e/kcos.txt -o ./results/poly_e_nm/kcos.out --nmopt --order 36 --tri
 
-echo "Done. Results are in ./results/"

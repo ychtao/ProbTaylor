@@ -1,0 +1,8 @@
+./benchmarks/poly_e/RigidBody1.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 8.976675e-09
+Optimal analysis order = 6
+First-order analysis time: 130.47s
+Second-order error threshold = 2.403411e-11
+Second-order analysis time: 0.512887s
+ 

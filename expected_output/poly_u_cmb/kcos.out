@@ -1,0 +1,7 @@
+./benchmarks/poly_u/kcos.txt
+Central moment based, order = 4, num = 1
+1st-order error threshold = 2.373478e-07
+First-order analysis time: 0.07s
+Second-order error threshold = 1.102505e-14
+Second-order analysis time: 7.360484s
+ 

@@ -1,0 +1,8 @@
+./benchmarks/poly_n/Filters4.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 4.892886e-06
+Optimal analysis order = 18
+First-order analysis time: 210.97s
+Second-order error threshold = 2.515569e-12
+Second-order analysis time: 7.708586s
+ 

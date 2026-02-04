@@ -1,0 +1,8 @@
+./benchmarks/quadrupled/Filters4.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 6.305413e-06
+Optimal analysis order = 12
+First-order analysis time: 163.40s
+Second-order error threshold = 1.006228e-11
+Second-order analysis time: 5.384735s
+ 

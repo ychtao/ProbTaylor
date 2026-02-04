@@ -1,0 +1,8 @@
+./benchmarks/quadrupled/RigidBody2.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 2.351938e-05
+Optimal analysis order = 4
+First-order analysis time: 133.10s
+Second-order error threshold = 7.236836e-07
+Second-order analysis time: 1.017022s
+ 

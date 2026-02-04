@@ -1,0 +1,7 @@
+./benchmarks/poly_e/RigidBody1.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 1.947368e-09
+First-order analysis time: 235.15s
+Second-order error threshold = 2.403411e-11
+Second-order analysis time: 0.350752s
+ 

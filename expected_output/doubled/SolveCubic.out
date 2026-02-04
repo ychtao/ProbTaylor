@@ -1,0 +1,8 @@
+./benchmarks/doubled/SolveCubic.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = inf
+Optimal analysis order = 0
+First-order analysis time: 30.45s
+Second-order error threshold = 1.956164e-11
+Second-order analysis time: 0.886041s
+ 

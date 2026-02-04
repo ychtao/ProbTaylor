@@ -1,0 +1,7 @@
+./benchmarks/poly_e/Traincars4.txt
+Central moment based, order = 4, num = 1
+1st-order error threshold = 8.070612e-02
+First-order analysis time: 5.07s
+Second-order error threshold = 4.701947e-08
+Second-order analysis time: 5.125584s
+ 

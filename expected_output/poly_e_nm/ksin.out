@@ -1,0 +1,8 @@
+./benchmarks/poly_e/ksin.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 3.866188e-09
+Optimal analysis order = 6
+First-order analysis time: 1.02s
+Second-order error threshold = 4.559399e-15
+Second-order analysis time: 8.352016s
+ 

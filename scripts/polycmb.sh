@@ -85,9 +85,6 @@
 ./bin/pt ./benchmarks/poly_e/bsplines1.txt -o ./results/poly_e_cmb/bsplines1.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/bsplines2.txt -o ./results/poly_e_cmb/bsplines2.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/bsplines3.txt -o ./results/poly_e_cmb/bsplines3.out --cmb --order 4 --num 8
-./bin/pt ./benchmarks/poly_e/ClassIDs0.txt -o ./results/poly_e_cmb/ClassIDs0.out --cmb --order 4 --num 1
-./bin/pt ./benchmarks/poly_e/ClassIDs1.txt -o ./results/poly_e_cmb/ClassIDs1.out --cmb --order 4 --num 1
-./bin/pt ./benchmarks/poly_e/ClassIDs2.txt -o ./results/poly_e_cmb/ClassIDs2.out --cmb --order 4 --num 1
 ./bin/pt ./benchmarks/poly_e/Filters1.txt -o ./results/poly_e_cmb/Filters1.out --cmb --order 4 --num 8  
 ./bin/pt ./benchmarks/poly_e/Filters2.txt -o ./results/poly_e_cmb/Filters2.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/Filters3.txt -o ./results/poly_e_cmb/Filters3.out --cmb --order 4 --num 8
@@ -95,7 +92,6 @@
 ./bin/pt ./benchmarks/poly_e/RigidBody1.txt -o ./results/poly_e_cmb/RigidBody1.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/RigidBody2.txt -o ./results/poly_e_cmb/RigidBody2.out --cmb --order 4 --num 1
 ./bin/pt ./benchmarks/poly_e/Sine.txt -o ./results/poly_e_cmb/Sine.out --cmb --order 4 --num 8
-./bin/pt ./benchmarks/poly_e/SolveCubic.txt -o ./results/poly_e_cmb/SolveCubic.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/Sqrt.txt -o ./results/poly_e_cmb/Sqrt.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/Traincars1.txt -o ./results/poly_e_cmb/Traincars1.out --cmb --order 4 --num 8
 ./bin/pt ./benchmarks/poly_e/Traincars2.txt -o ./results/poly_e_cmb/Traincars2.out --cmb --order 4 --num 1

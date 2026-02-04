@@ -1,0 +1,5 @@
+./benchmarks/scalability/175.txt
+Naive Markov, order = 2
+1st-order error threshold = 2.327515e-03
+First-order analysis time: 22.06s
+Note: Second-order error analysis skipped as per --er1 flag.

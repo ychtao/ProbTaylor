@@ -1,4 +1,4 @@
-set -euo pipefail
+# set -euo pipefail
 
 for n in $(seq 25 25 300); do
   python3 ./benchmarks/scalability/dpgen.py "$n"

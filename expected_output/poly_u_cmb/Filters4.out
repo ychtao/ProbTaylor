@@ -1,0 +1,7 @@
+./benchmarks/poly_u/Filters4.txt
+Central moment based, order = 4, num = 1
+1st-order error threshold = 7.228871e-06
+First-order analysis time: 0.41s
+Second-order error threshold = 2.515569e-12
+Second-order analysis time: 9.304794s
+ 

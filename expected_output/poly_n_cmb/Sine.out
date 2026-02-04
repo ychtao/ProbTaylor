@@ -1,0 +1,7 @@
+./benchmarks/poly_n/Sine.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 1.612145e-07
+First-order analysis time: 0.76s
+Second-order error threshold = 5.757697e-14
+Second-order analysis time: 2.110855s
+ 

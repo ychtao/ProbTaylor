@@ -1,0 +1,8 @@
+./benchmarks/poly_n/Sqrt.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 2.978144e-06
+Optimal analysis order = 4
+First-order analysis time: 0.45s
+Second-order error threshold = 1.664713e-11
+Second-order analysis time: 0.775887s
+ 

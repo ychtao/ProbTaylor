@@ -1,0 +1,7 @@
+./benchmarks/div_e/verhulst.txt
+Central moment based (fractional expression), order = 2, num = 16
+1st-order error threshold = 2.432965e-07
+First-order analysis time: 5.01s
+Second-order error threshold = 3.267742e-14
+Second-order analysis time: 1.339175s
+ 

@@ -1,0 +1,7 @@
+./benchmarks/div_u/predatorPrey.txt
+Central moment based (fractional expression), order = 2, num = 16
+1st-order error threshold = 4.416356e-07
+First-order analysis time: 8.24s
+Second-order error threshold = 1.542281e-14
+Second-order analysis time: 13.879178s
+ 

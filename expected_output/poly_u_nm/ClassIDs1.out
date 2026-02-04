@@ -1,0 +1,8 @@
+./benchmarks/poly_u/ClassIDs1.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 6.555840e-06
+Optimal analysis order = 36
+First-order analysis time: 101.05s
+Second-order error threshold = 7.682434e-13
+Second-order analysis time: 1.028121s
+ 

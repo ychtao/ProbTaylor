@@ -1,0 +1,8 @@
+./benchmarks/quadrupled/Traincars3.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 5.927114e-03
+Optimal analysis order = 8
+First-order analysis time: 136.27s
+Second-order error threshold = 1.550844e-08
+Second-order analysis time: 2.764267s
+ 

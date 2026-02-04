@@ -1,0 +1,8 @@
+./benchmarks/poly_n/Traincars3.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 5.921233e-03
+Optimal analysis order = 8
+First-order analysis time: 156.84s
+Second-order error threshold = 3.965887e-09
+Second-order analysis time: 4.860034s
+ 

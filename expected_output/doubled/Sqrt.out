@@ -1,0 +1,8 @@
+./benchmarks/doubled/Sqrt.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 2.978144e-06
+Optimal analysis order = 4
+First-order analysis time: 0.39s
+Second-order error threshold = 2.416982e-10
+Second-order analysis time: 0.686294s
+ 

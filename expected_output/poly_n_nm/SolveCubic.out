@@ -1,0 +1,8 @@
+./benchmarks/poly_n/SolveCubic.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 4.936704e-06
+Optimal analysis order = 18
+First-order analysis time: 37.52s
+Second-order error threshold = 2.645785e-12
+Second-order analysis time: 0.998442s
+ 

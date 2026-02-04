@@ -1,0 +1,8 @@
+./benchmarks/poly_e/Trid3.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 5.078110e-05
+Optimal analysis order = 4
+First-order analysis time: 130.48s
+Second-order error threshold = 4.281252e-09
+Second-order analysis time: 4.091270s
+ 

@@ -1,0 +1,7 @@
+./benchmarks/poly_u/Trid.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 6.961756e-03
+First-order analysis time: 34.91s
+Second-order error threshold = 6.864411e-10
+Second-order analysis time: 0.498369s
+ 

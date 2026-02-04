@@ -1,0 +1,7 @@
+./benchmarks/div_u/doppler1.txt
+Central moment based (fractional expression), order = 2, num = 16
+1st-order error threshold = 7.011119e-06
+First-order analysis time: 766.42s
+Second-order error threshold = 1.030883e-11
+Second-order analysis time: 0.656495s
+ 

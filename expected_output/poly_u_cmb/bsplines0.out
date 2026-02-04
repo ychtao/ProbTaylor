@@ -1,0 +1,7 @@
+./benchmarks/poly_u/bsplines0.txt
+Central moment based, order = 4, num = 8
+1st-order error threshold = 4.964511e-07
+First-order analysis time: 0.09s
+Second-order error threshold = 8.881785e-15
+Second-order analysis time: 0.571969s
+ 

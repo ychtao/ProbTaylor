@@ -1,0 +1,7 @@
+./benchmarks/poly_u/ksin.txt
+Central moment based, order = 4, num = 1
+1st-order error threshold = 1.127944e-07
+First-order analysis time: 0.10s
+Second-order error threshold = 4.559399e-15
+Second-order analysis time: 9.955748s
+ 

@@ -1,0 +1,8 @@
+./benchmarks/quadrupled/Sine.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 4.739501e-06
+Optimal analysis order = 4
+First-order analysis time: 1.57s
+Second-order error threshold = 1.598881e-11
+Second-order analysis time: 2.317311s
+ 

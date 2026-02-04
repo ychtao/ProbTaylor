@@ -1,0 +1,8 @@
+./benchmarks/doubled/ClassIDs1.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 3.431055e-06
+Optimal analysis order = 24
+First-order analysis time: 99.22s
+Second-order error threshold = 1.536487e-12
+Second-order analysis time: 1.004278s
+ 

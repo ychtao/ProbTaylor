@@ -1,0 +1,8 @@
+./benchmarks/doubled/bsplines1.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 2.776967e-06
+Optimal analysis order = 10
+First-order analysis time: 0.19s
+Second-order error threshold = 3.150073e-13
+Second-order analysis time: 0.546584s
+ 

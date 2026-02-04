@@ -9,6 +9,9 @@ open Unix
 
 let timeout = 90
 
+let get_verbose () = 
+  Array.exists (fun arg -> arg = "--verbose") Sys.argv
+
 let u_nm vars eps pn c order rcd : float = 
   let epn, rcd = expectation_of_expanded_expr pn vars rcd in 
   let u_nm = eps *. (epn /. (1. -. c)) ** (1. /. (float_of_int order)) in 
@@ -39,7 +42,9 @@ let cmb_flag_float vars_weight_list rcd eps p u order : float =
 
 let rec cmb_bin_search vars_weight_list rcd eps p c order left right : float = 
   let mid = (left *. right) ** 0.5 in 
+  (if get_verbose () then Printf.printf "left: %e; right: %e; mid: %e\n" left right mid; flush_all());
   let flag_float = cmb_flag_float vars_weight_list rcd eps p mid order in 
+  (if get_verbose () then Printf.printf "flag float: %e\n" flag_float; flush_all());
   if flag_float > 1. -. c then cmb_bin_search vars_weight_list rcd eps p c order mid right
   else if (right /. left) < 1.1 then mid 
   else cmb_bin_search vars_weight_list rcd eps p c order left mid
@@ -89,7 +94,8 @@ let central_moment_based filename eps cfd order num_intervals : float =
   let p = simplify_expanded_expr (invert_negative_term (separate_expanded_expr_opt sod vars)) in 
   let u_init = cmb_u_init vars eps p cfd in 
   let pn = power_of_expanded_expr p order in 
-  let u_nm = u_nm vars eps pn cfd order rcd in 
+  let u_nm' = u_nm vars eps pn cfd order rcd in 
+  let u_nm = if u_nm' <> u_nm' then u_init *. 10000. else u_nm' in 
   let vars_weight_list = split_vars_with_weight vars num_intervals in 
   if cmb_flag_float vars_weight_list rcd eps p u_nm order > 1. -. cfd then u_nm else 
   let u = cmb_bin_search vars_weight_list rcd eps p cfd order (u_init *. 1.01) (u_nm *. 1.01) in 

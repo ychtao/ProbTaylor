@@ -1,0 +1,8 @@
+./benchmarks/poly_e/kcos.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 1.416544e-06
+Optimal analysis order = 2
+First-order analysis time: 1.34s
+Second-order error threshold = 1.102505e-14
+Second-order analysis time: 6.384113s
+ 

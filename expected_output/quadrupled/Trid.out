@@ -1,0 +1,8 @@
+./benchmarks/quadrupled/Trid.txt
+Naive Markov Opt, max order = 36
+1st-order error threshold = 7.324387e-06
+Optimal analysis order = 8
+First-order analysis time: 159.56s
+Second-order error threshold = 1.084578e-08
+Second-order analysis time: 0.423629s
+ 
