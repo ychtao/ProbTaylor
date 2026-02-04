@@ -1,13 +1,3 @@
-# Minimal polynm.sh: run a single fixed benchmark and write a fixed result file.
-# Run this from the repo root as: ./scripts/polynm.sh
-
-#!/usr/bin/env bash
-# set -euo pipefail
-
-# Minimal script that runs a fixed list of experiments.
-# Run from the repository root as: ./scripts/polynm.sh
-
-
 ./bin/pt ./benchmarks/poly_u/bsplines0.txt -o ./results/poly_u_nm/bsplines0.out --nmopt --order 36 
 ./bin/pt ./benchmarks/poly_u/bsplines1.txt -o ./results/poly_u_nm/bsplines1.out --nmopt --order 36 
 ./bin/pt ./benchmarks/poly_u/bsplines2.txt -o ./results/poly_u_nm/bsplines2.out --nmopt --order 36 
