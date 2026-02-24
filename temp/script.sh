@@ -5,7 +5,7 @@ set -euo pipefail
 
 mkdir -p ./temp
 
-for n in $(seq 50 50 1000); do
+for n in $(seq 25 25 1000); do
   echo "[N=$n] Generating input and running ./bin/pt"
   python3 ./temp/gen.py "$n"
   ./bin/pt ./temp/"$n".in --nm --order 2 --er1 -o ./temp/"$n".out
