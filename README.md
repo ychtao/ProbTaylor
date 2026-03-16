@@ -24,4 +24,14 @@ To run ProbTaylor, use the following command under root directory: `./bin/pt <be
 
 + `--tri`: analyze second-order error with the brute-force method (default: using GELPIA)
 
-+ `--er1`: analyze first-order error only 
++ `--er1`: analyze first-order error only
+
+Since the dependency GELPIA has not been actively maintained, the whole system only runs on Ubuntu 18.04. To compile the whole system:
+
+1. Under the same directory, git clone from `https://github.com/rospoly/gelpia.git` and put the unzipped ProbTaylor code.
+
+2. Run `cd gelpia`, and then, under the `gelpia` directory, run `make requirements` and then `make`. This step compiles the GELPIA tool.
+
+3. Run `cd ../probtaylor` and then compile ProbTaylor by running `make`.
+
+4. Under the `probtaylor` directory, follow the instructions above to run the tool on benchmarks.
